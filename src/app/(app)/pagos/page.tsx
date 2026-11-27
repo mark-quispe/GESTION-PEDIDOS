@@ -1,7 +1,6 @@
 import { requireUser } from "@/lib/auth-guard";
 import { listPayments, priceChanges } from "@/lib/queries/payments";
 import { addDays, monthStart, todayLima, weekStart } from "@/lib/dates";
-import { PageBody } from "@/components/layout/page-header";
 import { PaymentsBoard, type Period } from "@/components/payments/payments-board";
 
 export const metadata = { title: "Pagos" };
@@ -29,8 +28,7 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
   const { from, to } = range(period, day);
   const [rows, changes] = await Promise.all([listPayments(from, to), priceChanges(from, to)]);
   return (
-    <PageBody>
-      <PaymentsBoard
+    <PaymentsBoard
         rows={rows}
         changes={changes.map((c) => ({ ...c, at: c.at.toISOString() }))}
         period={period}
@@ -40,6 +38,5 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
         today={todayLima()}
         initialFilter={sp.f === "precios" ? "precios" : sp.f === "revisar" ? "revisar" : "todos"}
       />
-    </PageBody>
   );
 }
