@@ -46,14 +46,14 @@ export function ClientList({ rows }: { rows: ClientRow[] }) {
   }, [visible]);
 
   return (
-    <section aria-label="Lista de clientes" className={cn("flex min-h-0 w-full shrink-0 flex-col border-r bg-side/60 md:sticky md:top-0 md:h-dvh md:w-[340px]", onDetail && "hidden md:flex")}>
-      <header className="flex flex-col gap-3 px-4 pt-4 pb-3 md:px-5 md:pt-7">
-        <div className="flex items-end justify-between">
+    <section aria-label="Lista de clientes" className={cn("flex min-h-0 w-full shrink-0 flex-col border-r bg-bg/92 md:sticky md:top-0 md:h-dvh md:w-[380px]", onDetail && "hidden md:flex")}>
+      <header className="flex flex-col gap-3 border-b px-4 pt-4 pb-3.5 md:px-5 md:pt-6">
+        <div className="flex items-center justify-between">
           <div>
             <p className="mb-1 font-mono text-[11px] text-muted">03 · Clientes</p>
-            <h1 className="text-[28px] font-medium tracking-[-0.02em]">Clientes</h1>
+            <h1 className="mt-1 text-2xl font-medium tracking-[-0.02em]">Clientes</h1>
           </div>
-          <Button variant="primary" size="md" onClick={() => setCreating(true)}>
+          <Button variant="primary" size="md" className="h-[34px] px-3.5 text-sm" onClick={() => setCreating(true)}>
             <Plus /> Nuevo
           </Button>
         </div>
@@ -76,35 +76,35 @@ export function ClientList({ rows }: { rows: ClientRow[] }) {
               role="tab"
               aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={cn("press h-8 shrink-0 rounded-md px-2.5 text-[12.5px] font-medium whitespace-nowrap transition-colors duration-150", tab === k ? "bg-line text-fg" : "text-muted hover-fine:hover:text-fg")}
+              className={cn("press h-[30px] shrink-0 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors duration-150", tab === k ? "bg-line text-fg" : "text-muted hover-fine:hover:text-fg")}
             >
               {label}
             </button>
           ))}
         </div>
       </header>
-      <div className="scroll-thin min-h-0 flex-1 overflow-y-auto border-t border-line pb-24 md:pb-4">
+      <div className="scroll-thin min-h-0 flex-1 overflow-y-auto pb-24 md:pb-4">
         {groups.length === 0 && <p className="px-5 py-10 text-center text-sm text-faint">{q ? `Nadie coincide con «${q}».` : "Todavía no hay clientes."}</p>}
         {groups.map(([letter, list]) => (
           <div key={letter}>
-            <p className="px-5 pt-3 pb-1 font-mono text-[11px] text-faint">{letter}</p>
+            <p className="px-5 pt-3.5 pb-1 font-mono text-[11px] text-muted">{letter}</p>
             {list.map((r) => (
               <Link
                 key={r.id}
                 href={`/clientes/${r.id}`}
                 aria-current={r.id === activeId ? "page" : undefined}
-                className={cn("row grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 px-5 py-2", r.id === activeId && "bg-hover")}
+                className={cn("row grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 px-5 py-2.5", r.id === activeId && "bg-hover")}
               >
-                <span className="grid size-8 place-items-center rounded-full border bg-surface text-[10.5px] font-semibold">{initials(r.name)}</span>
+                <span className="grid size-8 place-items-center rounded-full border bg-line text-[10px] font-semibold">{initials(r.name)}</span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{r.name}</span>
                   <span className="block truncate text-xs text-muted">
                     {r.university ? `${r.university} · ` : ""}
-                    {formatPhone(r.whatsapp)}
+                    <span className="font-mono">{formatPhone(r.whatsapp)}</span>
                   </span>
                 </span>
                 <span className="text-right">
-                  {r.pending > 0 ? <span className="block font-mono text-xs text-warning">{formatMoney(r.pending)}</span> : <span className="block font-mono text-xs text-muted">{r.jobs} trab.</span>}
+                  {r.pending > 0 ? <span className="block font-mono text-xs text-warning">{formatMoney(r.pending)}</span> : <span className="block font-mono text-xs">{r.jobs} trab.</span>}
                   <span className="block font-mono text-[11px] text-faint">{r.lastOrder ? dayMonth(r.lastOrder) : "—"}</span>
                 </span>
               </Link>
