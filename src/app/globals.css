@@ -552,3 +552,33 @@
     animation: none;
   }
 }
+/* Agenda: en los sin tomar, Tomar se despliega al pasar el mouse (siempre visible en táctil). */
+.agenda-pool .agenda-act {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition:
+    max-height 180ms var(--ease-out),
+    margin-top 180ms ease-out,
+    opacity 150ms ease-out,
+    transform 180ms var(--ease-out);
+}
+.agenda-pool:hover .agenda-act,
+.agenda-pool:focus-within .agenda-act {
+  max-height: 40px;
+  margin-top: 6px;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .agenda-pool .agenda-act {
+    max-height: 40px;
+    margin-top: 6px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
