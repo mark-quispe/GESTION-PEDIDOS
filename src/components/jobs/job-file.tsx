@@ -478,7 +478,7 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex min-w-0 items-start gap-5">
-        <span className="hidden size-[62px] shrink-0 place-items-center rounded-xl border border-info-line bg-info-soft text-info sm:grid" aria-hidden>
+        <span className="hidden size-[62px] shrink-0 place-items-center rounded-xl border bg-surface text-fg-2 sm:grid" aria-hidden>
           <CategoryGlyph code={job.items[0]?.categoryCode} />
         </span>
         <div className="min-w-0">
@@ -662,7 +662,7 @@ function StatusSteps({ job, history }: { job: JobJSON; history: HistoryEntry[] }
                   <Check className="size-4 text-bg" strokeWidth={3} />
                 </span>
               ) : current ? (
-                <span className="grid size-7 place-items-center rounded-full border-[3px] border-info shadow-[0_0_0_4px_var(--info-soft)]">
+                <span className="grid size-7 place-items-center rounded-full border-[3px] border-info">
                   <span className="size-2.5 rounded-full bg-info" />
                 </span>
               ) : (
