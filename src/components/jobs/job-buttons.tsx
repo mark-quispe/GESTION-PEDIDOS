@@ -14,14 +14,16 @@ export function JobActionButtons({ size = "md", long, jobId, className }: { size
       <Button size={size} onClick={() => openPayment(jobId ?? null)}>
         {long ? "Registrar pago" : <span className="md:hidden">Pago</span>}
         {!long && <span className="hidden md:inline">Registrar pago</span>}
-        <Kbd className="hidden md:inline-flex">P</Kbd>
+        {!long && <Kbd className="hidden md:inline-flex">P</Kbd>}
       </Button>
       <Button size={size} variant="primary" onClick={() => openNewJob()}>
         <Plus strokeWidth={2} />
         {long ? "Nuevo trabajo" : "Nuevo"}
-        <Kbd inverse className="hidden md:inline-flex">
-          N
-        </Kbd>
+        {!long && (
+          <Kbd inverse className="hidden md:inline-flex">
+            N
+          </Kbd>
+        )}
       </Button>
     </div>
   );

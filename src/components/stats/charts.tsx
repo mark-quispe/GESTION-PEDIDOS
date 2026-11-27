@@ -88,21 +88,17 @@ export function Donut({ data, size = 150, center }: { data: { label: string; val
   const total = data.reduce((a, d) => a + d.value, 0) || 1;
   const r = 52;
   const c = 2 * Math.PI * r;
-  let acc = 0;
+  const lens = data.map((d) => (d.value / total) * c);
+  const starts = lens.map((_, i) => lens.slice(0, i).reduce((a, x) => a + x, 0));
   return (
     <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg viewBox="0 0 140 140" width={size} height={size} className="-rotate-90" role="img" aria-label={data.map((d) => `${d.label} ${Math.round((d.value / total) * 100)} %`).join(", ")}>
         <circle cx="70" cy="70" r={r} fill="none" stroke="var(--line)" strokeWidth="16" />
-        {data.map((d) => {
-          const len = (d.value / total) * c;
-          const el = (
-            <circle key={d.label} cx="70" cy="70" r={r} fill="none" stroke={d.color} strokeWidth="16" strokeDasharray={`${Math.max(0, len - 2)} ${c}`} strokeDashoffset={-acc} className="donut-in">
-              <title>{`${d.label} · ${Math.round((d.value / total) * 100)} %`}</title>
-            </circle>
-          );
-          acc += len;
-          return el;
-        })}
+        {data.map((d, i) => (
+          <circle key={d.label} cx="70" cy="70" r={r} fill="none" stroke={d.color} strokeWidth="16" strokeDasharray={`${Math.max(0, lens[i] - 2)} ${c}`} strokeDashoffset={-starts[i]} className="donut-in">
+            <title>{`${d.label} · ${Math.round((d.value / total) * 100)} %`}</title>
+          </circle>
+        ))}
       </svg>
       {center && <div className="absolute text-center">{center}</div>}
     </div>

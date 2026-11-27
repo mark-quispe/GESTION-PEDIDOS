@@ -33,16 +33,17 @@ export function HomeCard({ title, aside, tone, children, className, footer, badg
   );
 }
 
-export function Row({ href, code, title, sub, right, className }: { href: string; code: string; title: string; sub: string; right?: ReactNode; className?: string }) {
+/** Fila del Inicio: código en mono (76 px), nombre y detalle, y algo a la derecha. Solo las cotizaciones llevan flecha. */
+export function Row({ href, code, title, sub, right, className, chevron }: { href: string; code: string; title: string; sub: string; right?: ReactNode; className?: string; chevron?: boolean }) {
   return (
-    <Link href={href} className={cn("row link-row grid grid-cols-[76px_minmax(0,1fr)_auto_14px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0", className)}>
+    <Link href={href} className={cn("row grid items-center gap-3 border-b border-line px-4 py-2.5", chevron ? "link-row grid-cols-[76px_minmax(0,1fr)_auto_14px]" : "grid-cols-[76px_minmax(0,1fr)_auto]", className)}>
       <span className="font-mono text-[11px] text-muted">{code}</span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-medium">{title}</span>
         <span className="block truncate text-xs text-muted">{sub}</span>
       </span>
       <span className="text-right">{right}</span>
-      <ChevronRight className="chev size-3.5 text-muted" />
+      {chevron && <ChevronRight className="chev size-3.5 text-muted" />}
     </Link>
   );
 }
@@ -160,6 +161,7 @@ function QuoteRows({ rows }: { rows: Dashboard["quotes"] }) {
   if (rows.length === 0) return <EmptyRow>No hay cotizaciones esperando.</EmptyRow>;
   return rows.map((r) => (
     <Row
+      chevron
       key={r.id}
       href={`/trabajos/${r.code}`}
       code={r.code}
@@ -248,27 +250,18 @@ export function LoadQuotesCard({ load, quotes, badge, className }: { load: Dashb
   );
 }
 
-/** RF-49: tarjeta Trabajos (el pozo). Tomar aparece al pasar el mouse. */
+/** RF-49: tarjeta Trabajos (el pozo). Tomar aparece a la izquierda de la fecha al pasar el mouse. */
 export function PoolCard({ pool, hot, canTake, className }: { pool: JobRow[]; hot: JobRow[]; canTake: boolean; className?: string }) {
   const hotIds = new Set(hot.map((h) => h.id));
   const rest = pool.filter((p) => !hotIds.has(p.id));
   return (
-    <HomeCard
-      title="Trabajos"
-      aside={`${pool.length} por tomar`}
-      className={className}
-      footer={
-        <Link href="/trabajos" className="shrink-0 border-t border-line px-4 py-2.5 text-xs text-muted hover-fine:hover:text-fg">
-          Ver todos en Trabajos →
-        </Link>
-      }
-    >
+    <HomeCard title="Trabajos" aside={`${pool.length} por tomar`} className={className}>
       {hot.map((r) => (
-        <Link key={r.id} href={`/trabajos/${r.code}`} className={cn("row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-line px-4 py-2.5 shadow-[inset_2px_0_0_var(--danger)]")}>
+        <Link key={r.id} href={`/trabajos/${r.code}`} className="row grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line px-4 py-[7px]">
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium">{r.title}</span>
-            <span className="block truncate text-xs text-muted">
-              {r.code} · {r.clientName} · {r.responsibleName ?? r.externoName ?? <span className="text-warning">por tomar</span>}
+            <span className="mt-px block truncate text-xs text-muted">
+              <span className="font-mono text-[11px]">{r.code}</span> · {r.clientName} · {r.responsibleName ?? r.externoName ?? <span className="text-warning">por tomar</span>}
             </span>
           </span>
           <Pill tone="danger">{r.late ? `+${r.lateDays} ${r.lateDays === 1 ? "día" : "días"}` : "Urgente"}</Pill>
@@ -277,34 +270,31 @@ export function PoolCard({ pool, hot, canTake, className }: { pool: JobRow[]; ho
       {rest.length === 0 && hot.length === 0 && <EmptyRow>No hay trabajos por tomar.</EmptyRow>}
       {rest.map((r) => {
         const missing = r.itemsDone > 0 && r.itemsDone < r.itemsTotal;
+        const soon = dayKey(r.dueAt) <= addDays(todayLima(), 1);
         const today = dayKey(r.dueAt) === todayLima();
         return (
-          <Link
-            key={r.id}
-            href={`/trabajos/${r.code}`}
-            className={cn(
-              "reveal row grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-line px-4 py-2 last:border-b-0",
-              r.urgency === "urgente" ? "shadow-[inset_2px_0_0_var(--danger)]" : r.urgency === "alta" ? "shadow-[inset_2px_0_0_var(--warning)]" : "",
-            )}
-          >
+          <Link key={r.id} href={`/trabajos/${r.code}`} className="reveal row grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line px-4 py-[7px]">
             <span className="min-w-0">
               <span className="block truncate text-sm font-medium">{r.title}</span>
-              <span className="block truncate text-xs text-muted">
-                {r.code} · {r.clientName}
+              <span className="mt-px block truncate text-xs text-muted">
+                <span className="font-mono text-[11px]">{r.code}</span> · {r.clientName}
                 {missing && <span className="text-warning"> · falta {r.itemsTotal - r.itemsDone} de {r.itemsTotal}</span>}
               </span>
             </span>
-            <span className="flex items-center gap-2.5">
+            <span className="relative flex items-center">
               {canTake && (
-                <span className="act">
+                <span className="act absolute top-1/2 right-[calc(100%+10px)] -mt-3.5 flex">
                   <TakeButton jobId={r.id} />
                 </span>
               )}
-              <span className={cn("font-mono text-[11px]", today || r.late ? "text-warning" : "text-muted")}>{dueLabel(r.dueAt, new Date(), today)}</span>
+              <span className={cn("font-mono text-[11.5px]", soon || r.late ? "text-warning" : "text-muted")}>{dueLabel(r.dueAt, new Date(), today)}</span>
             </span>
           </Link>
         );
       })}
+      <Link href="/trabajos" className="block px-4 py-2.5 text-right text-xs text-muted hover-fine:hover:text-fg">
+        Ver todos en Trabajos →
+      </Link>
     </HomeCard>
   );
 }
@@ -363,7 +353,7 @@ export function FinishedWeekCard({ rows, className }: { rows: JobRow[]; classNam
             title={r.clientName}
             sub={r.title}
             right={
-              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted">
+              <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full border px-2 text-xs">
                 <span className="size-1.5 rounded-full bg-success" />
                 {r.finishedAt ? dayLabel(dayKey(r.finishedAt)) : ""}
               </span>
