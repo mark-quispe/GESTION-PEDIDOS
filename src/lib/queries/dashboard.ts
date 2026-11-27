@@ -98,7 +98,7 @@ export async function getDashboard(withMoney: boolean): Promise<Dashboard> {
     pool,
     hot,
     toSend,
-    pending: { rows: pendingRows, total: round2(pendingRows.reduce((a, r) => a + r.pending, 0)) },
+    pending: { rows: pendingRows, total: withMoney ? round2(pendingRows.reduce((a, r) => a + r.pending, 0)) : 0 },
     finishedWeek,
     load,
     alerts,

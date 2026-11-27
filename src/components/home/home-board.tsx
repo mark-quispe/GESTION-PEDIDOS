@@ -420,7 +420,7 @@ function DonePanel({ d, admin }: { d: Dashboard; admin: boolean }) {
                 />
               );
             })}
-            {d.pending.rows.length > 0 && <p className="px-5 py-2.5 text-right text-[13px] text-muted">Total por cobrar: <span className="font-semibold text-warning tabular-nums">{formatMoney(d.pending.total)}</span></p>}
+            {admin && d.pending.rows.length > 0 && <p className="px-5 py-2.5 text-right text-[13px] text-muted">Total por cobrar: <span className="font-semibold text-warning tabular-nums">{formatMoney(d.pending.total)}</span></p>}
           </>
         )}
         {tab === "pagos" && d.money && (

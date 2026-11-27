@@ -134,7 +134,7 @@ const GRID = "md:grid-cols-[10px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_118
 export type LastViewed = { code: string; title: string } | null;
 
 /** Trabajos (RF-12), con la distribución que pidió Mark el 27/11. */
-export function JobsBoard({ rows, canTake, last, initialQ = "", respName }: { rows: JobRow[]; canTake: boolean; last: LastViewed; initialQ?: string; respName?: string | null }) {
+export function JobsBoard({ rows, canTake, last, initialQ = "", respName, isAdmin }: { rows: JobRow[]; canTake: boolean; last: LastViewed; initialQ?: string; respName?: string | null; isAdmin: boolean }) {
   const [filter, setFilter] = useState<Filter>("todos");
   const [q, setQ] = useState(initialQ);
   const [allClosed, setAllClosed] = useState(false);
@@ -342,7 +342,7 @@ export function JobsBoard({ rows, canTake, last, initialQ = "", respName }: { ro
 
         <section className="enter overflow-hidden rounded-lg border bg-surface" style={{ "--i": 3 } as React.CSSProperties}>
           <h3 className="flex justify-between border-b border-line px-4 py-3 text-[16px] font-medium">
-            Pendientes por cobrar <span className="text-sm font-normal text-muted tabular-nums">{formatMoney(toCollectTotal)}</span>
+            Pendientes por cobrar <span className="text-sm font-normal text-muted tabular-nums">{isAdmin ? formatMoney(toCollectTotal) : toCollect.length}</span>
           </h3>
           {toCollect.length === 0 && <p className="px-4 py-5 text-center text-[13px] text-faint">Todo cobrado.</p>}
           <div className="flex flex-col px-4 py-1">

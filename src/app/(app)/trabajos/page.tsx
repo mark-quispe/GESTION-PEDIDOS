@@ -21,6 +21,7 @@ export default async function TrabajosPage({ searchParams }: PageProps<"/trabajo
         last={last ? { code: last.code, title: last.title } : null}
         initialQ={typeof sp.q === "string" ? sp.q.slice(0, 80) : ""}
         respName={respName}
+        isAdmin={user.isAdmin && !user.viewAsEmployee}
       />
     </PageBody>
   );
