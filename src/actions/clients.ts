@@ -111,14 +111,14 @@ export async function addObservation(input: z.input<typeof obsSchema>): Promise<
 }
 
 /** RF-29: eliminar es ocultar (solo admin). Se restaura desde Eliminados. */
-export async function deleteClient(id: string): Promise<ActionResult> {
+export async function deleteClient(id: string, reason?: string): Promise<ActionResult> {
   try {
     const user = await assertRole("admin");
     const c = await db.query.clients.findFirst({ where: and(eq(clients.id, id), isNull(clients.deletedAt)) });
     if (!c) throw new UserError("Ese cliente ya no existe.");
     await batch([
       db.update(clients).set({ deletedAt: new Date(), deletedById: user.id }).where(eq(clients.id, id)),
-      audit({ entity: "cliente", entityId: id, action: "eliminar", summary: `eliminó al cliente ${c.name}`, userId: user.id }),
+      audit({ entity: "cliente", entityId: id, action: "eliminar", summary: `eliminó al cliente ${c.name}`, after: reason?.trim() ? { reason: reason.trim().slice(0, 200) } : null, userId: user.id }),
     ]);
     done();
     return { ok: true };

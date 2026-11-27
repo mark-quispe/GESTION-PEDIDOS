@@ -1,13 +1,17 @@
 import { requireUser } from "@/lib/auth-guard";
-import { PageBody, PageHeader } from "@/components/layout/page-header";
+import { getHistory } from "@/lib/queries/history";
+import { PageBody } from "@/components/layout/page-header";
+import { HistoryBoard } from "@/components/admin/history-board";
 
 export const metadata = { title: "Historial" };
 
-export default async function Page() {
+/** RF-21 / RNF-24: quién cambió qué y cuándo (solo admin). */
+export default async function HistoryPage() {
   await requireUser("admin");
+  const rows = await getHistory();
   return (
-    <PageBody>
-      <PageHeader n="12" title="Historial" description="Esta pestaña se está programando." />
+    <PageBody className="lg:h-dvh lg:max-h-dvh lg:min-h-[760px] lg:overflow-hidden">
+      <HistoryBoard rows={rows} />
     </PageBody>
   );
 }
