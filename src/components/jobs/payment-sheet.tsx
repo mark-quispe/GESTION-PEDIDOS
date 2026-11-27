@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { Banknote, CalendarDays, Check, ChevronDown, CircleDollarSign, Coins, FileText, Hash, Info, Landmark, MessageSquare, Paperclip, QrCode, Search, Smartphone, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 import * as D from "@radix-ui/react-dialog";
 import { searchOpenJobs, type JobPick } from "@/actions/catalog";
@@ -12,81 +12,40 @@ import { dayMonthNum, dueLabel, todayLima } from "@/lib/dates";
 import { cn, formatMoney } from "@/lib/utils";
 import { REFUND_REASON, type RefundInput } from "@/lib/validation/jobs";
 import type { PaymentMethod } from "@/db/schema";
-import { DialogContent, DialogRoot, SheetContent } from "@/components/ui/dialog";
+import { DialogContent, DialogRoot } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Choice } from "@/components/ui/choice";
 import { Stepper } from "@/components/ui/stepper";
 import { DropZone } from "@/components/ui/drop-zone";
 
-const toneDot = { sin_pagar: "bg-danger", adelanto: "bg-warning", pagado: "bg-success", de_mas: "bg-warning" } as const;
 
-function MoneyBox({ m, after }: { m: JobMoney; after?: number }) {
-  const st = payState(m.total, m.paid);
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-lg border bg-bg px-3.5 py-3">
-        <p className="font-mono text-[11px] text-muted">{m.code}</p>
-        <p className="mt-0.5 text-sm font-medium">{m.title}</p>
-        <p className="text-xs text-muted">
-          {m.clientName}
-          {m.clientUniversity ? ` · ${m.clientUniversity}` : ""} · entrega {dueLabel(m.dueAt).toLowerCase()}
-        </p>
-        <span className="mt-2 inline-flex h-[22px] items-center gap-1.5 rounded-full border px-2 text-xs">
-          <span className={cn("size-1.5 rounded-full", toneDot[st])} />
-          {PAY_STATE_LABEL[st]}
-        </span>
-      </div>
-      <dl className="grid grid-cols-3 overflow-hidden rounded-lg border text-[13px]">
-        {[
-          ["Precio", formatMoney(m.total), ""],
-          ["Pagado", formatMoney(m.paid), ""],
-          ["Pendiente", formatMoney(m.pending), m.pending > 0 ? "text-warning" : ""],
-        ].map(([k, v, c], i) => (
-          <div key={k} className={cn("px-3 py-2", i > 0 && "border-l")}>
-            <dt className="font-mono text-[10.5px] text-muted">{k}</dt>
-            <dd className={cn("mt-0.5 font-mono", c)}>{v}</dd>
-          </div>
-        ))}
-      </dl>
-      {m.payments.length > 0 && (
-        <div className="rounded-lg border px-3 py-2">
-          <p className="mb-1 font-mono text-[10.5px] text-muted">Pagos anteriores</p>
-          {m.payments.map((p) => (
-            <p key={p.id} className={cn("flex justify-between py-0.5 text-[12.5px]", p.voided && "text-faint line-through")}>
-              <span className="text-muted">
-                {dayMonthNum(p.paidAt)} · {METHOD_LABEL[p.method as PaymentMethod]}
-                {p.kind === "devolucion" && " · devolución"}
-              </span>
-              <span className="font-mono">
-                {p.kind === "devolucion" ? "− " : ""}
-                {formatMoney(p.amount)}
-              </span>
-            </p>
-          ))}
-        </div>
-      )}
-      {after !== undefined && (
-        <p className="rounded-lg border border-dashed px-3 py-2 text-[12.5px] text-muted">
-          Después de guardar
-          <span className="block text-fg">
-            Pendiente {formatMoney(Math.max(0, m.total - after))} ·{" "}
-            <span className={payState(m.total, after) === "pagado" ? "text-success" : payState(m.total, after) === "de_mas" ? "text-warning" : ""}>
-              {PAY_STATE_LABEL[payState(m.total, after)]}
-            </span>
-          </span>
-        </p>
-      )}
-    </div>
-  );
-}
-
-/** Registrar pago (RF-14): panel a la derecha. Desde la ficha, el trabajo ya viene elegido. */
+/** Registrar pago (RF-14): ventana flotante (rediseño de Mark, 27/11). Desde la ficha, el trabajo ya viene elegido. */
 export function PaymentSheet({ open, onOpenChange, jobId, driveReady }: { open: boolean; onOpenChange: (v: boolean) => void; jobId: string | null; driveReady: boolean }) {
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       {open && <PaymentForm initialJobId={jobId} close={() => onOpenChange(false)} driveReady={driveReady} />}
     </D.Root>
+  );
+}
+
+const METHOD_ICON: Record<PaymentMethod, ReactNode> = {
+  yape: <Smartphone className="size-[18px]" strokeWidth={1.7} />,
+  plin: <QrCode className="size-[18px]" strokeWidth={1.7} />,
+  transferencia: <Landmark className="size-[18px]" strokeWidth={1.7} />,
+  efectivo: <Banknote className="size-[18px]" strokeWidth={1.7} />,
+};
+
+function Block({ icon, title, opt, children, className }: { icon: ReactNode; title: string; opt?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <section className={cn("rounded-xl border bg-surface px-4 py-4", className)}>
+      <h3 className="mb-3 flex items-center gap-3 text-[16px] font-medium">
+        <span className="text-muted [&>svg]:size-5">{icon}</span>
+        {title}
+        {opt && <span className="font-normal text-muted">(opcional)</span>}
+      </h3>
+      {children}
+    </section>
   );
 }
 
@@ -96,11 +55,13 @@ function PaymentForm({ initialJobId, close, driveReady }: { initialJobId: string
   const [jobId, setJobId] = useState(initialJobId);
   const [loaded, setMoney] = useState<JobMoney | null>(null);
   const [q, setQ] = useState("");
+  const [open, setOpen] = useState(!initialJobId);
   const [hits, setHits] = useState<JobPick[]>([]);
   const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState<PaymentMethod>("yape");
   const [day, setDay] = useState(todayLima());
   const [op, setOp] = useState("");
+  const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -114,109 +75,248 @@ function PaymentForm({ initialJobId, close, driveReady }: { initialJobId: string
   const money = jobId && loaded?.id === jobId ? loaded : null;
 
   useEffect(() => {
-    if (jobId) return;
+    if (!open) return;
     const t = setTimeout(async () => setHits(await searchOpenJobs(q)), 150);
     return () => clearTimeout(t);
-  }, [q, jobId]);
+  }, [q, open]);
 
   const save = () =>
     start(async () => {
       if (!jobId) return void toast.error("Elige el trabajo");
-      const r = await registerPayment({ jobId, amount, method, paidDate: day, operationNumber: op || undefined });
+      const r = await registerPayment({ jobId, amount, method, paidDate: day, operationNumber: op || undefined, note: note || undefined });
       if (!r.ok) return void toast.error(r.error);
       toast.success(`Pago de ${formatMoney(amount)} registrado.`);
       close();
       router.refresh();
     });
 
+  const after = money ? round2(money.paid + amount) : 0;
+  const afterState = money ? payState(money.total, after) : null;
+
   return (
-    <SheetContent
-      eyebrow={`02 · Trabajos${money ? ` · ${money.code}` : ""}`}
-      title="Registrar pago"
-      className="max-w-[760px]"
-      footer={
-        <div className="flex w-full items-center justify-between gap-3">
-          <p className="text-xs text-faint">{initialJobId ? "Desde la ficha, el trabajo ya viene elegido." : "Queda confirmado al guardar."}</p>
-          <div className="flex gap-2">
-            <Button size="md" onClick={close}>
-              Cancelar
-            </Button>
-            <Button size="md" variant="primary" onClick={save} disabled={pending || !jobId || amount <= 0}>
-              {pending ? "Guardando…" : "Registrar pago"}
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="flex flex-col gap-4">
-          <Field label="Monto">
-            <Stepper label="Monto" value={amount} step={10} prefix="S/" decimals={2} onChange={setAmount} />
-          </Field>
-          {money && money.pending > 0 && (
-            <div className="-mt-2 flex flex-wrap gap-1.5">
-              <Button size="sm" onClick={() => setAmount(money.pending)}>
-                Todo lo pendiente · {formatMoney(money.pending)}
-              </Button>
-              <Button size="sm" onClick={() => setAmount(round2(money.pending / 2))}>
-                Mitad · {formatMoney(round2(money.pending / 2))}
-              </Button>
+    <D.Portal>
+      <D.Overlay className="overlay fixed inset-0 z-50 bg-scrim backdrop-blur-[3px]" />
+      <D.Content
+        aria-describedby={undefined}
+        className="modal fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[1060px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border bg-side shadow-[0_30px_80px_rgba(0,0,0,0.5)] focus:outline-none [&_*]:leading-[normal]"
+      >
+        <header className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
+          <div className="flex items-center gap-4">
+            <span className="grid size-[60px] shrink-0 place-items-center rounded-xl border bg-surface">
+              <Coins className="size-7 text-fg-2" strokeWidth={1.6} />
+            </span>
+            <div>
+              <D.Title className="text-[24px] font-semibold tracking-[-0.02em]">Registrar pago</D.Title>
+              <p className="mt-1 text-[15px] text-muted">Registra un abono o pago total de un trabajo.</p>
             </div>
-          )}
-          <Field label="Medio">
-            <Choice label="Medio de pago" value={method} onChange={setMethod} options={METHODS.map((m) => ({ value: m, label: METHOD_LABEL[m] }))} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Fecha">
-              <Input type="date" value={day} max={todayLima()} onChange={(e) => setDay(e.target.value)} />
-            </Field>
-            <Field label="N.º de operación" optional>
-              <Input value={op} onChange={(e) => setOp(e.target.value)} className="font-mono" />
-            </Field>
           </div>
-          <Field label="Captura del comprobante" optional>
-            <DropZone
-              file={file}
-              onFile={setFile}
-              where={money ? `Drive › ${money.code} › Pagos` : "Drive › Pagos"}
-              disabledHint={driveReady ? null : "Drive sin conectar: la captura se podrá subir cuando el admin lo conecte."}
-            />
-          </Field>
-          <p className="text-xs text-faint">Queda confirmado al guardar. El admin lo revisa en Pagos del día.</p>
-        </div>
-        <aside className="flex flex-col gap-3">
-          {!initialJobId && (
-            <Field label="Trabajo" aside={<span className="font-mono text-[11px] text-faint">código o cliente</span>}>
-              {jobId && money ? (
-                <button type="button" onClick={() => setJobId(null)} className="press flex h-10 items-center justify-between rounded-md border bg-surface px-3 text-left font-mono text-sm">
-                  {money.code}
-                  <span className="font-sans text-xs text-info">Cambiar</span>
-                </button>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  <label className="flex h-10 items-center gap-2 rounded-md border bg-surface px-3 focus-within:border-muted">
-                    <Search className="size-4 text-muted" />
-                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="PC26-014 o Lucía" aria-label="Buscar trabajo" className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
-                  </label>
-                  <div className="overflow-hidden rounded-md border">
+          <D.Close aria-label="Cerrar" className="press grid size-11 place-items-center rounded-lg border bg-surface text-muted hover-fine:hover:text-fg">
+            <X className="size-5" />
+          </D.Close>
+        </header>
+
+        <div className="scroll-thin grid min-h-0 flex-1 gap-5 overflow-y-auto px-5 pb-5 md:grid-cols-[minmax(0,1fr)_310px]">
+          <div className="flex min-w-0 flex-col gap-4">
+            <Block icon={<FileText strokeWidth={1.6} />} title="Trabajo">
+              <div className="relative">
+                <label className="flex h-11 items-center gap-3 rounded-lg border bg-bg/60 px-3.5 focus-within:border-muted">
+                  <Search className="size-[18px] text-muted" />
+                  <input
+                    autoFocus={!initialJobId}
+                    value={open ? q : money ? `${money.code} · ${money.title}` : q}
+                    onFocus={() => setOpen(true)}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setOpen(true);
+                    }}
+                    placeholder="Buscar por código, nombre o cliente…"
+                    aria-label="Buscar trabajo"
+                    className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted"
+                  />
+                  <button type="button" aria-label="Abrir la lista" onClick={() => setOpen((v) => !v)} className="text-muted">
+                    <ChevronDown className={cn("size-5 transition-transform duration-200", open && "rotate-180")} />
+                  </button>
+                </label>
+                {open && (
+                  <div className="pop-in absolute top-[calc(100%+6px)] right-0 left-0 z-10 max-h-64 origin-top overflow-y-auto rounded-lg border bg-surface shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
                     {hits.map((h) => (
-                      <button key={h.id} type="button" onClick={() => setJobId(h.id)} className="row flex w-full flex-col px-3 py-2 text-left">
-                        <span className="font-mono text-[11px] text-muted">{h.code}</span>
-                        <span className="truncate text-[13px]">
-                          {h.clientName} · {h.title}
+                      <button
+                        key={h.id}
+                        type="button"
+                        onClick={() => {
+                          setJobId(h.id);
+                          setOpen(false);
+                          setQ("");
+                        }}
+                        className={cn("row flex w-full items-center gap-3 px-3.5 py-2.5 text-left", h.id === jobId && "bg-hover")}
+                      >
+                        <span className="w-[72px] shrink-0 font-mono text-[12.5px] text-muted">{h.code}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm">{h.title}</span>
+                          <span className="block truncate text-xs text-muted">{h.clientName}</span>
                         </span>
+                        <span className="text-xs text-muted tabular-nums">{formatMoney(h.price)}</span>
                       </button>
                     ))}
-                    {hits.length === 0 && <p className="px-3 py-3 text-xs text-faint">Escribe el código o el nombre.</p>}
+                    {hits.length === 0 && <p className="px-3.5 py-3 text-[13px] text-faint">Escribe el código, el trabajo o el cliente.</p>}
+                  </div>
+                )}
+              </div>
+            </Block>
+
+            <Block icon={<CircleDollarSign strokeWidth={1.6} />} title="Monto y medio de pago">
+              <div className="grid gap-4 lg:grid-cols-[180px_minmax(0,1fr)]">
+                <div>
+                  <p className="mb-2 text-[14px] text-muted">Monto a registrar</p>
+                  <Stepper label="Monto a registrar" value={amount} step={10} prefix="S/" decimals={2} onChange={setAmount} className="h-11 bg-bg/60" />
+                  {money && money.pending > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <button type="button" onClick={() => setAmount(money.pending)} className="press rounded-md border px-2 py-1 text-xs text-muted hover-fine:hover:text-fg">
+                        Todo · {formatMoney(money.pending)}
+                      </button>
+                      <button type="button" onClick={() => setAmount(round2(money.pending / 2))} className="press rounded-md border px-2 py-1 text-xs text-muted hover-fine:hover:text-fg">
+                        Mitad
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="mb-2 text-[14px] text-muted">Medio de pago</p>
+                  <div role="radiogroup" aria-label="Medio de pago" className="flex flex-wrap gap-1.5">
+                    {METHODS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        role="radio"
+                        aria-checked={method === m}
+                        onClick={() => setMethod(m)}
+                        className={cn(
+                          "press inline-flex h-11 items-center gap-2 rounded-lg border px-3 text-[14px] transition-colors",
+                          method === m ? "border-fg bg-line text-fg" : "bg-bg/60 text-fg-2 hover-fine:hover:border-border-strong",
+                        )}
+                      >
+                        {METHOD_ICON[m]}
+                        {METHOD_LABEL[m]}
+                      </button>
+                    ))}
                   </div>
                 </div>
+              </div>
+              <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 flex items-center gap-2.5 text-[15px] font-medium">
+                    <CalendarDays className="size-5 text-muted" strokeWidth={1.6} /> Fecha de pago
+                  </span>
+                  <input type="date" value={day} max={todayLima()} onChange={(e) => setDay(e.target.value)} className="h-11 w-full rounded-lg border bg-bg/60 px-3.5 text-[15px] outline-none focus:border-muted dark:[color-scheme:dark]" />
+                </label>
+                <label className="block">
+                  <span className="mb-2 flex items-center gap-2.5 text-[15px] font-medium">
+                    <Hash className="size-5 text-muted" strokeWidth={1.6} /> N.º de operación <span className="font-normal text-muted">(opcional)</span>
+                  </span>
+                  <input value={op} onChange={(e) => setOp(e.target.value)} placeholder="Ej. 123456" className="h-11 w-full rounded-lg border bg-bg/60 px-3.5 font-mono text-[15px] outline-none placeholder:text-faint focus:border-muted" />
+                </label>
+              </div>
+              <div className="mt-4 border-t border-line pt-4">
+                <p className="mb-2 flex items-center gap-2.5 text-[15px] font-medium">
+                  <Paperclip className="size-5 text-muted" strokeWidth={1.6} /> Comprobante <span className="font-normal text-muted">(opcional)</span>
+                </p>
+                <DropZone
+                  file={file}
+                  onFile={setFile}
+                  title="Arrastra o selecciona una imagen"
+                  accept="image/*,application/pdf"
+                  where={money ? `Drive › ${money.code} › Pagos` : "Drive › Pagos"}
+                  disabledHint={driveReady ? null : "Drive sin conectar: la captura se podrá subir cuando el admin lo conecte."}
+                />
+              </div>
+              <label className="mt-4 block border-t border-line pt-4">
+                <span className="mb-2 flex items-center gap-2.5 text-[15px] font-medium">
+                  <MessageSquare className="size-5 text-muted" strokeWidth={1.6} /> Observaciones <span className="font-normal text-muted">(opcional)</span>
+                </span>
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={300} placeholder="Ej. Pago del adelanto." className="w-full resize-y rounded-lg border bg-bg/60 px-3.5 py-2.5 text-[15px] outline-none placeholder:text-faint focus:border-muted" />
+              </label>
+            </Block>
+          </div>
+
+          <aside className="flex flex-col gap-4">
+            <Block icon={<FileText strokeWidth={1.6} />} title="Trabajo seleccionado">
+              {money ? (
+                <div>
+                  <p className="font-mono text-[13px] text-muted">{money.code}</p>
+                  <p className="mt-1 text-[17px] font-semibold">{money.title}</p>
+                  <p className="mt-2 flex items-center gap-2 text-[14px] text-muted">
+                    <UserRound className="size-4" /> {money.clientName}
+                  </p>
+                  <p className="mt-1 text-[13px] text-faint">Entrega {dueLabel(money.dueAt).toLowerCase()}</p>
+                </div>
+              ) : (
+                <p className="text-[14px] text-faint">Elige un trabajo para ver lo que debe.</p>
               )}
-            </Field>
-          )}
-          {money && <MoneyBox m={money} after={round2(money.paid + amount)} />}
-        </aside>
-      </div>
-    </SheetContent>
+            </Block>
+            {money && (
+              <section className="overflow-hidden rounded-xl border bg-surface">
+                <h3 className="flex items-center gap-3 px-4 pt-4 pb-2 text-[16px] font-medium">
+                  <Coins className="size-5 text-muted" strokeWidth={1.6} /> Estado de pago
+                </h3>
+                <div className="flex justify-between px-4 py-2 text-[15px]">
+                  <span className="text-fg-2">Total del trabajo</span>
+                  <span className="font-semibold tabular-nums">{formatMoney(money.total)}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2 text-[15px] text-success">
+                  <span>Pagado</span>
+                  <span className="font-semibold tabular-nums">{formatMoney(money.paid)}</span>
+                </div>
+                <div className={cn("flex justify-between px-4 py-2.5 text-[15px]", money.pending > 0 ? "bg-warning-soft text-warning" : "text-success")}>
+                  <span>Pendiente</span>
+                  <span className="font-semibold tabular-nums">{formatMoney(money.pending)}</span>
+                </div>
+                {money.payments.length > 0 && (
+                  <div className="border-t border-line px-4 py-2.5">
+                    <p className="mb-1 text-xs text-muted">Pagos anteriores</p>
+                    {money.payments.map((p) => (
+                      <p key={p.id} className={cn("flex justify-between py-0.5 text-[12.5px]", p.voided && "text-faint line-through")}>
+                        <span className="text-muted">
+                          {dayMonthNum(p.paidAt)} · {METHOD_LABEL[p.method as PaymentMethod]}
+                          {p.kind === "devolucion" && " · devolución"}
+                        </span>
+                        <span className="tabular-nums">
+                          {p.kind === "devolucion" ? "− " : ""}
+                          {formatMoney(p.amount)}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+            <p className="flex gap-3 rounded-xl border bg-surface px-4 py-3.5 text-[13.5px] text-fg-2">
+              <Info className="mt-0.5 size-[18px] shrink-0 text-muted" />
+              {money && afterState ? (
+                <span>
+                  El pago se registrará y lo pendiente quedará en <b className="font-semibold">{formatMoney(Math.max(0, money.total - after))}</b> ·{" "}
+                  <span className={afterState === "pagado" ? "text-success" : afterState === "de_mas" ? "text-warning" : ""}>{PAY_STATE_LABEL[afterState]}</span>.
+                </span>
+              ) : (
+                <span>El pago se registrará y se actualizará el saldo pendiente del trabajo.</span>
+              )}
+            </p>
+          </aside>
+        </div>
+
+        <footer className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
+          <p className="hidden text-[13px] text-faint sm:block">Queda confirmado al guardar. El admin lo revisa en Pagos.</p>
+          <div className="ml-auto flex gap-3">
+            <button type="button" onClick={close} className="press h-11 rounded-lg border bg-surface px-5 text-[15px] font-medium">
+              Cancelar
+            </button>
+            <button type="button" onClick={save} disabled={pending || !jobId || amount <= 0} className="press inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-[15px] font-medium text-on-primary disabled:opacity-45">
+              <Check className="size-5" strokeWidth={2.2} />
+              {pending ? "Guardando…" : "Registrar pago"}
+            </button>
+          </div>
+        </footer>
+      </D.Content>
+    </D.Portal>
   );
 }
 

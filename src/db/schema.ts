@@ -119,14 +119,28 @@ export const externos = pgTable("externos", {
 
 export type UrgencyConfig = Record<Urgency, { hours: number; pct: number }>;
 export type CycleFactors = Record<string, number>;
-export type AlertsConfig = { quoteDays: number; pendingDays: number; driveFullPct: number; backupFailed: boolean };
+export type AlertsConfig = {
+  quoteDays: number;
+  pendingDays: number;
+  driveFullPct: number;
+  backupFailed: boolean;
+  /* RF-56: cada aviso se puede apagar; Drive lleno se mide en GB. */
+  quoteOn?: boolean;
+  pendingOn?: boolean;
+  driveOn?: boolean;
+  driveFullGb?: number;
+};
 
 export const settings = pgTable("settings", {
   id: integer().primaryKey().default(1),
   /** RF-08: número con el que empieza el correlativo cada año (1 o 100). */
   codeStart: integer().notNull().default(1),
   studioName: text().notNull().default("Estudio"),
+  /** RF-56: logo pequeño como data URL (PNG o SVG). */
   logoUrl: text(),
+  contactEmail: text(),
+  /** Ciclo académico que se propone al registrar (2026-II). Vacío = se deduce de la fecha. */
+  academicTerm: text(),
   /** RF-55 */
   instagram: text(),
   tiktok: text(),
@@ -148,6 +162,8 @@ export const settings = pgTable("settings", {
   driveConnectedAt: timestamp({ withTimezone: true }),
   /** RF-30: se marca cuando Google rechaza la llave. */
   driveDisconnectedAt: timestamp({ withTimezone: true }),
+  /** RF-32: el respaldo de cada noche se puede pausar. */
+  backupEnabled: boolean().notNull().default(true),
   lastBackupAt: timestamp({ withTimezone: true }),
   lastBackupOk: boolean(),
   updatedAt: timestamp({ withTimezone: true })

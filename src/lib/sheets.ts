@@ -21,7 +21,8 @@ export const CLIENT_COLUMNS = [
 export const JOB_COLUMNS = [
   "Código",
   "WhatsApp del cliente",
-  "Tipo",
+  "Ítems",
+  "Ciclo",
   "Curso",
   "Profesor",
   "Sección",
@@ -60,11 +61,11 @@ export const CONTINGENCY_CLIENT_COLUMNS = ["Nombre", "WhatsApp", "Universidad", 
 export const CONTINGENCY_JOB_COLUMNS = [
   "Código",
   "WhatsApp del cliente",
-  "Tipo",
+  "Ítems",
+  "Ciclo",
   "Curso",
   "Profesor",
   "Sección",
-  "Ciclo",
   "Descripción",
   "Fecha de entrega",
   "Urgencia",
@@ -86,24 +87,29 @@ function addSheet(wb: ExcelJS.Workbook, name: string, columns: readonly string[]
 }
 
 export type ExportData = {
-  clients: (string | null)[][];
+  clients: (string | number | null)[][];
   jobs: (string | number | null)[][];
   payments: (string | number | null)[][];
 };
 
-/** RF-27 y RF-32: una hoja por tabla. */
-export async function buildDataWorkbook(data: ExportData): Promise<Buffer> {
+/** RF-27 y RF-32: una hoja por tabla (solo las pedidas). */
+export async function buildDataWorkbook(data: Partial<ExportData> & { history?: (string | number | null)[][] }): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "Gestión de pedidos";
-  addSheet(wb, "Clientes", CLIENT_COLUMNS, data.clients);
-  addSheet(wb, "Trabajos", JOB_COLUMNS, data.jobs);
-  addSheet(wb, "Pagos", PAYMENT_COLUMNS, data.payments);
+  if (data.clients) addSheet(wb, "Clientes", CLIENT_COLUMNS, data.clients);
+  if (data.jobs) addSheet(wb, "Trabajos", JOB_COLUMNS, data.jobs);
+  if (data.payments) addSheet(wb, "Pagos", PAYMENT_COLUMNS, data.payments);
+  if (data.history) addSheet(wb, "Historial", ["Fecha y hora", "Quién", "Trabajo", "Qué", "Acción", "Detalle"], data.history);
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
 /** Plantilla vacía para la carga inicial (RF-28). */
 export async function buildTemplateWorkbook(): Promise<Buffer> {
-  return buildDataWorkbook({ clients: [], jobs: [], payments: [] });
+  return buildDataWorkbook({
+    clients: [["Lucía Huamán", "987 654 321", "UPC", "Arquitectura", "7", "Instagram", "AutoCAD", "2024", "A3", "Paga por Yape"]],
+    jobs: [["", "987 654 321", "PL-02 x2, PL-06", 7, "Taller 5", "Arq. Ramos", "B", "", "Planos de vivienda", "2026-12-05 18:00", "Normal", "", "", "Confirmado", "", 0]],
+    payments: [],
+  });
 }
 
 /** RF-33: planilla de contingencia vacía, con los últimos códigos en la primera hoja. */

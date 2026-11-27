@@ -28,7 +28,7 @@ export type SummaryData = {
   extra: number;
   total: number;
   paid: number;
-  studio?: { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null };
+  studio?: { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null; logoUrl?: string | null };
   isQuote?: boolean;
 };
 
@@ -116,9 +116,14 @@ export function ClientSummaryDialog({ data, onClose }: { data: SummaryData | nul
             {data && (
               <div ref={sheet} className="w-[420px] max-w-full shrink-0 bg-[#f6f5f0] px-8 py-8 text-[#1a1a1a]" style={{ fontFamily: "var(--font-work-sans)" }}>
                 <div className="flex items-center gap-2.5 border-b border-[#d9d7cf] pb-4">
-                  <span className="grid size-9 place-items-center rounded-md border border-[#1a1a1a]">
-                    <BrandMark size={20} />
-                  </span>
+                  {data.studio?.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- logo pequeño guardado como data URL
+                    <img src={data.studio.logoUrl} alt="" className="size-9 rounded-md object-contain" />
+                  ) : (
+                    <span className="grid size-9 place-items-center rounded-md border border-[#1a1a1a]">
+                      <BrandMark size={20} />
+                    </span>
+                  )}
                   <span className="leading-tight">
                     <span className="block text-[17px] font-semibold tracking-tight">{data.studio?.name ?? "Estudio"}</span>
                     <span className="block text-[11px] text-[#6b6a65]">estudio de arquitectura</span>

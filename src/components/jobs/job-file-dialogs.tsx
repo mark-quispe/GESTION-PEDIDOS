@@ -72,11 +72,14 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
   const doneItems = job.items.filter((i) => i.doneAt);
   const left = job.items.filter((i) => !i.doneAt);
   const h = (xs: typeof job.items) => round2(xs.reduce((a, i) => a + i.hours, 0));
+  // El admin saca a otra persona (o al externo); quien lo tiene lo suelta.
+  const other = job.responsibleId !== me.id;
+  const name = job.externo?.name ?? job.responsible?.name ?? "";
   const save = () =>
     start(async () => {
       const r = await releaseJob({ jobId: job.id, note: note || undefined });
       if (!r.ok) return void toast.error(r.error);
-      toast.success(left.length ? "Soltado. Lo que falta volvió a Por tomar." : "Soltado.");
+      toast.success(other ? `${name.split(" ")[0]} ya no está en este trabajo. Volvió a Por tomar.` : left.length ? "Soltado. Lo que falta volvió a Por tomar." : "Soltado.");
       onOpenChange(false);
       router.refresh();
     });
@@ -84,27 +87,31 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
     <DialogRoot open={open} onOpenChange={onOpenChange}>
       {open && (
         <DialogContent
-          eyebrow={`${job.code} · soltar`}
-          title={left.length && doneItems.length ? `Soltar con ${left.length} ${left.length === 1 ? "ítem pendiente" : "ítems pendientes"}` : "Soltar el trabajo"}
-          description={`El trabajo vuelve a quedar sin tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que hiciste queda a tu nombre.`}
+          eyebrow={`${job.code} · ${other ? "sacar" : "soltar"}`}
+          title={other ? `Sacar a ${name} del trabajo` : left.length && doneItems.length ? `Soltar con ${left.length} ${left.length === 1 ? "ítem pendiente" : "ítems pendientes"}` : "Soltar el trabajo"}
+          description={
+            other
+              ? `El trabajo vuelve a Por tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que ${name.split(" ")[0]} ya hizo queda a su nombre. Queda en el Historial.`
+              : `El trabajo vuelve a quedar sin tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que hiciste queda a tu nombre.`
+          }
           footer={
             <>
               <Button size="md" onClick={() => onOpenChange(false)}>
-                Seguir con él
+                {other ? "Volver" : "Seguir con él"}
               </Button>
-              <Button size="md" variant="primary" onClick={save} disabled={pending}>
-                <Undo2 /> Soltar
+              <Button size="md" variant={other ? "danger" : "primary"} onClick={save} disabled={pending}>
+                <Undo2 /> {other ? `Sacar a ${name.split(" ")[0]}` : "Soltar"}
               </Button>
             </>
           }
         >
           <div className="flex flex-col gap-3">
             {doneItems.length > 0 && (
-              <ItemGroup title={`Queda a ${me.name.split(" ")[0] === job.responsible?.name?.split(" ")[0] ? "tu nombre" : "nombre de quien lo hizo"}`} meta={`${h(doneItems)} h · ${doneItems.length} ${doneItems.length === 1 ? "ítem" : "ítems"}`} items={doneItems} done />
+              <ItemGroup title={`Queda a ${me.name.split(" ")[0] === job.responsible?.name?.split(" ")[0] ? "tu nombre" : "nombre de quien lo hizo"}`} meta={`${h(doneItems)} h aprox. · ${doneItems.length} ${doneItems.length === 1 ? "ítem" : "ítems"}`} items={doneItems} done />
             )}
-            {left.length > 0 && <ItemGroup title="Falta · vuelve a Por tomar" tone="warning" meta={`${h(left)} h · ${left.length} ${left.length === 1 ? "ítem" : "ítems"}`} items={left} />}
-            <Field label="Nota para quien lo tome" optional>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Dónde dejaste los archivos, qué falta revisar…" />
+            {left.length > 0 && <ItemGroup title="Falta · vuelve a Por tomar" tone="warning" meta={`${h(left)} h aprox. · ${left.length} ${left.length === 1 ? "ítem" : "ítems"}`} items={left} />}
+            <Field label={other ? "Motivo y nota para quien lo tome" : "Nota para quien lo tome"} optional>
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={other ? "Por qué lo sacas, dónde están los archivos, qué falta…" : "Dónde dejaste los archivos, qué falta revisar…"} />
             </Field>
           </div>
         </DialogContent>
@@ -124,7 +131,7 @@ function ItemGroup({ title, meta, items, done, tone }: { title: string; meta: st
         <p key={i.id} className="flex items-center gap-3 border-t border-line px-3 py-2 text-[13px] first-of-type:border-t-0">
           <span className="w-12 font-mono text-[11px] text-muted">{i.code}</span>
           <span className={cn("min-w-0 flex-1 truncate", done && "text-muted line-through")}>{i.name}</span>
-          <span className="font-mono text-[11px] text-faint">{i.hours} h</span>
+          <span className="font-mono text-[11px] text-faint">{i.hours} h aprox.</span>
         </p>
       ))}
     </div>
@@ -319,7 +326,7 @@ function CorrectionForm({ job, close, me, externos, driveReady }: { job: JobJSON
             onChange={setWho}
             options={[
               { value: "pozo", label: "Por tomar" },
-              { value: "yo", label: "Yo la tomo", disabled: !me.canTake },
+              { value: "yo", label: "Yo la tomo" },
               { value: "externo", label: "Externo…", disabled: externos.length === 0 },
             ]}
           />
@@ -359,21 +366,24 @@ export function EditDialog({
   onOpenChange,
   urgency,
   externos,
+  itemsFirst,
 }: {
   job: JobJSON;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   urgency: UrgencyConfig;
   externos: { id: string; name: string }[];
+  /** Desde «Editar ítems»: abre con la lista de ítems ya desplegada. */
+  itemsFirst?: boolean;
 }) {
   const [data, setData] = useState<NewJobData | null>(null);
   useEffect(() => {
     if (open && !data) getNewJobData().then(setData);
   }, [open, data]);
-  return <DialogRoot open={open} onOpenChange={onOpenChange}>{open && <EditForm job={job} close={() => onOpenChange(false)} cfg={urgency} externos={externos} data={data} />}</DialogRoot>;
+  return <DialogRoot open={open} onOpenChange={onOpenChange}>{open && <EditForm job={job} close={() => onOpenChange(false)} cfg={urgency} externos={externos} data={data} itemsFirst={itemsFirst} />}</DialogRoot>;
 }
 
-function EditForm({ job, close, cfg, externos, data }: { job: JobJSON; close: () => void; cfg: UrgencyConfig; externos: { id: string; name: string }[]; data: NewJobData | null }) {
+function EditForm({ job, close, cfg, externos, data, itemsFirst }: { job: JobJSON; close: () => void; cfg: UrgencyConfig; externos: { id: string; name: string }[]; data: NewJobData | null; itemsFirst?: boolean }) {
   const router = useRouter();
   const { openRefund } = useJobDialogs();
   const [pending, start] = useTransition();
@@ -397,7 +407,7 @@ function EditForm({ job, close, cfg, externos, data }: { job: JobJSON; close: ()
       done: !!i.doneAt,
     })),
   );
-  const [showItems, setShowItems] = useState(false);
+  const [showItems, setShowItems] = useState(!!itemsFirst);
   const [extra, setExtra] = useState(job.complexityExtra);
   const [discount, setDiscount] = useState(job.discount);
   const [course, setCourse] = useState(job.course ?? "");

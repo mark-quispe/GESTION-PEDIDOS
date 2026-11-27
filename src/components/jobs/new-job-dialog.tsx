@@ -235,7 +235,13 @@ function NewJobForm({ data, prefill, close }: { data: NewJobData; prefill: NewJo
               <Button variant="secondary" size="md" onClick={close}>
                 Descartar
               </Button>
-              <Button variant="primary" size="md" onClick={() => submit()} disabled={pending}>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => submit()}
+                disabled={pending || (status === "confirmado" && advanceValue + 0.004 < round2(total / 2))}
+                title={status === "confirmado" && advanceValue + 0.004 < round2(total / 2) ? `Para confirmar, el adelanto debe ser al menos ${formatMoney(round2(total / 2))} (50 %)` : undefined}
+              >
                 {pending ? "Guardando…" : status === "cotizacion" ? "Guardar cotización" : advanceValue > 0 ? "Crear trabajo y adelanto" : "Crear trabajo"}
               </Button>
             </div>
@@ -355,7 +361,7 @@ function NewJobForm({ data, prefill, close }: { data: NewJobData; prefill: NewJo
               <div className="flex items-end justify-between gap-4 rounded-lg border bg-bg px-4 py-3">
                 <span>
                   <span className="block text-[13px] text-fg-2">Total a cobrar</span>
-                  <span className="block font-mono text-[11.5px] text-faint">≈ {totals.hours} h · 2 correcciones incluidas</span>
+                  <span className="block font-mono text-[11.5px] text-faint">{totals.hours} h aprox. · 2 correcciones incluidas</span>
                 </span>
                 <span key={total} className="number-pop font-mono text-[28px] font-medium tracking-tight">
                   {formatMoney(total)}
@@ -408,6 +414,7 @@ function NewJobForm({ data, prefill, close }: { data: NewJobData; prefill: NewJo
                         </div>
                       </Field>
                       <div className="flex flex-col justify-end rounded-md bg-bg px-3 py-2">
+                        {advanceValue + 0.004 < round2(total / 2) && <span className="mb-1 text-xs text-danger">Mínimo 50 %: {formatMoney(round2(total / 2))}</span>}
                         <span className="font-mono text-[11px] text-muted">Queda por cobrar</span>
                         <span className="font-mono text-lg text-warning">{formatMoney(Math.max(0, total - advanceValue))}</span>
                       </div>

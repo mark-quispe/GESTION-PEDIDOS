@@ -4,13 +4,37 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useOptimistic, useState, useTransition, type ReactNode } from "react";
 import {
+  BookOpen,
+  Box,
+  MessageCircle,
+  Compass,
+  Ruler,
+  CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
+  ClipboardList,
+  Coins,
+  GraduationCap,
+  History,
+  Layers,
+  MessageSquare,
+  NotebookPen,
+  Paperclip,
+  Pencil,
+  Phone,
+  Presentation,
+  ChevronsUp,
+  Diamond,
+  Zap,
+  UserMinus,
+  UserRound,
+  Users,
+  WalletCards,
   ChevronRight,
   CircleCheck,
   FileText,
   FolderOpen,
-  List,
   MoreHorizontal,
   Plus,
   RotateCcw,
@@ -53,14 +77,14 @@ import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/field";
 import { Avatar, TakeButton } from "@/components/jobs/bits";
-import { JobListCompact, filterRows } from "@/components/jobs/job-list";
-import { JobActionButtons } from "@/components/jobs/job-buttons";
+import { filterRows } from "@/components/jobs/job-list";
+import { JobsPanel } from "@/components/jobs/jobs-panel";
 import { useJobDialogs } from "@/components/jobs/job-dialogs";
 import { ClientSummaryDialog, type SummaryData } from "@/components/jobs/client-summary";
 import { CancelDialog, CorrectionDialog, EditDialog, ReleaseDialog, VoidPaymentDialog } from "@/components/jobs/job-file-dialogs";
 import type { HistoryEntry, JobJSON, Me } from "@/components/jobs/types";
 
-type Studio = { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null };
+type Studio = { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null; logoUrl?: string | null };
 type Tab = "resumen" | "archivos" | "notas" | "historial";
 
 export function JobFile({
@@ -87,7 +111,7 @@ export function JobFile({
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("resumen");
   const [listOpen, setListOpen] = useState(false);
-  const [dialog, setDialog] = useState<null | "release" | "correction" | "edit" | "cancel">(null);
+  const [dialog, setDialog] = useState<null | "release" | "correction" | "edit" | "items" | "cancel">(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
 
   // Navegación ‹ 3 de 12 › entre los trabajos en curso (J / K).
@@ -149,28 +173,35 @@ export function JobFile({
   return (
     <div className="relative flex min-h-dvh flex-1 flex-col" data-job-id={job.id}>
       <article aria-label="Ficha del trabajo" className="flex min-w-0 flex-1 flex-col gap-5 px-4 pt-3 pb-28 md:px-9 md:pt-7 md:pb-10">
-        {/* Barra de arriba */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3.5">
-          <JobActionButtons jobId={job.id} />
-          <div className="flex items-center gap-2.5">
-            {nav.next && (
-              <Link href={`/trabajos/${nav.next.code}`} className="hidden max-w-[300px] truncate text-xs text-faint xl:block">
-                Siguiente: <span className="text-muted">{nav.next.code} · {nav.next.title}</span>
-              </Link>
-            )}
-            <div className="flex items-center gap-0.5">
+        {/* Barra de arriba: migas, ‹ 2 de 17 › y la lista (rediseño de Mark, 27/11) */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <nav aria-label="Ruta" className="flex items-center gap-2.5 text-[17px]">
+            <Link href="/trabajos" className="text-muted hover-fine:hover:text-fg">
+              Trabajos
+            </Link>
+            <ChevronRight className="size-4 text-faint" />
+            <span className="font-mono text-[15px]">{job.code}</span>
+          </nav>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 rounded-lg border bg-surface p-1">
               <NavBtn label="Anterior (K)" href={nav.prev ? `/trabajos/${nav.prev.code}` : null}>
-                <ChevronLeft className="size-4" />
+                <ChevronLeft className="size-[18px]" />
               </NavBtn>
-              <span className="px-2 font-mono text-xs whitespace-nowrap text-muted">{nav.i >= 0 ? `${nav.i + 1} de ${nav.list.length}` : "—"}</span>
+              <span className="px-2 text-[15px] whitespace-nowrap text-fg-2 tabular-nums">{nav.i >= 0 ? `${nav.i + 1} de ${nav.list.length}` : "—"}</span>
               <NavBtn label="Siguiente (J)" href={nav.next ? `/trabajos/${nav.next.code}` : null}>
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-[18px]" />
               </NavBtn>
             </div>
-            <Button size="md" onClick={() => setListOpen(true)} aria-expanded={listOpen}>
-              Trabajos <span className="hidden font-mono text-[11px] font-normal text-muted sm:inline">En curso · {nav.openCount}</span>
-              <List className="size-4" />
-            </Button>
+            <button
+              type="button"
+              onClick={() => setListOpen(true)}
+              aria-expanded={listOpen}
+              title={nav.next ? `Siguiente: ${nav.next.code} · ${nav.next.title}` : undefined}
+              className="press inline-flex h-11 items-center gap-3 rounded-lg border bg-surface px-4 text-[15px] font-medium hover-fine:hover:border-border-strong"
+            >
+              Trabajos <span className="hidden text-[13px] font-normal text-muted sm:inline">En curso · {nav.openCount}</span>
+              <ChevronDown className="size-4 text-muted" />
+            </button>
           </div>
         </div>
 
@@ -179,60 +210,70 @@ export function JobFile({
 
         <StatusSteps job={job} history={history} />
 
-        <div role="tablist" aria-label="Partes de la ficha" className="flex gap-5 overflow-x-auto border-b [scrollbar-width:none]">
-          {(
-            [
-              ["resumen", "Resumen", null],
-              ["archivos", "Archivos", job.files.length || null],
-              ["notas", "Notas", unreadNotes || null],
-              ["historial", "Historial", null],
-            ] as const
-          ).map(([k, label, n]) => (
-            <button
-              key={k}
-              role="tab"
-              type="button"
-              aria-selected={tab === k}
-              onClick={() => setTab(k)}
-              className={cn(
-                "relative flex h-9 shrink-0 items-center gap-1.5 px-0.5 text-[13px] font-medium transition-colors duration-150",
-                tab === k ? "text-fg" : "text-muted hover-fine:hover:text-fg",
-              )}
-            >
-              {label}
-              {n !== null && (
-                <span className={cn("inline-grid h-4 min-w-4 place-items-center rounded-full px-1 font-mono text-[10px]", k === "notas" ? "bg-warning text-bg" : "text-muted")}>{n}</span>
-              )}
-              {tab === k && <span className="tab-underline absolute inset-x-0 -bottom-px h-0.5 bg-fg" />}
-            </button>
-          ))}
-        </div>
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_470px]">
+          <div className="flex min-w-0 flex-col gap-5">
+            <div role="tablist" aria-label="Partes de la ficha" className="flex gap-7 overflow-x-auto border-b [scrollbar-width:none]">
+              {(
+                [
+                  ["resumen", "Resumen", null, ClipboardList],
+                  ["archivos", "Archivos", job.files.length || null, Paperclip],
+                  ["notas", "Notas", unreadNotes || null, NotebookPen],
+                  ["historial", "Historial", null, History],
+                ] as const
+              ).filter(([k]) => k !== "historial" || me.isAdmin).map(([k, label, n, Icon]) => (
+                <button
+                  key={k}
+                  role="tab"
+                  type="button"
+                  aria-selected={tab === k}
+                  onClick={() => setTab(k)}
+                  className={cn(
+                    "relative flex h-12 shrink-0 items-center gap-2.5 px-1 text-[16px] font-medium transition-colors duration-150",
+                    tab === k ? "text-fg" : "text-muted hover-fine:hover:text-fg",
+                  )}
+                >
+                  <Icon className="size-5" strokeWidth={1.7} />
+                  {label}
+                  {n !== null && (
+                    <span className={cn("inline-grid h-5 min-w-5 place-items-center rounded-full px-1 font-mono text-[11px]", k === "notas" ? "bg-warning text-bg" : "bg-line text-muted")}>{n}</span>
+                  )}
+                  {tab === k && <span className="tab-underline absolute inset-x-0 -bottom-px h-0.5 bg-fg" />}
+                </button>
+              ))}
+            </div>
 
-        {tab === "resumen" && (
-          <div key="resumen" className="enter flex flex-col gap-5">
-            <DataGrid job={job} me={me} late={late} closed={closed} factor={factor} />
-            <ItemsSection job={job} me={me} closed={closed} onSummary={() => setSummary(summaryData())} onEdit={() => setDialog("edit")} />
-            {job.extras.length > 0 && <ExtrasSection job={job} />}
-            <PaymentsSection job={job} me={me} money={money} />
-            <RelatedSection job={job} />
-            {job.notes[0] && (
-              <section className="rounded-lg border bg-surface px-4 py-3.5">
-                <div className="flex items-baseline justify-between">
-                  <p className="font-mono text-[11px] text-muted">
-                    Última nota · {job.notes[0].author?.name ?? "—"} · {timeAgo(job.notes[0].createdAt)}
-                  </p>
-                  <button type="button" onClick={() => setTab("notas")} className="text-xs text-info">
-                    Ver bitácora
-                  </button>
-                </div>
-                <p className="mt-1.5 text-sm">{job.notes[0].body}</p>
-              </section>
+            {tab === "resumen" && (
+              <div key="resumen" className="enter flex flex-col gap-5">
+                <DataGrid job={job} me={me} late={late} closed={closed} factor={factor} />
+                <ItemsSection job={job} me={me} closed={closed} onSummary={() => setSummary(summaryData())} onEdit={() => setDialog("items")} />
+                {job.extras.length > 0 && <ExtrasSection job={job} />}
+                <RelatedSection job={job} />
+                {job.notes[0] && (
+                  <section className="rounded-xl border bg-surface px-5 py-4">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-[13px] text-muted">
+                        Última nota · {job.notes[0].author?.name ?? "—"} · {timeAgo(job.notes[0].createdAt)}
+                      </p>
+                      <button type="button" onClick={() => setTab("notas")} className="text-[13px] text-info">
+                        Ver bitácora
+                      </button>
+                    </div>
+                    <p className="mt-1.5 text-[15px]">{job.notes[0].body}</p>
+                  </section>
+                )}
+              </div>
             )}
-          </div>
-        )}
-        {tab === "archivos" && <FilesTab job={job} me={me} driveReady={driveReady} />}
+                    {tab === "archivos" && <FilesTab job={job} me={me} driveReady={driveReady} />}
         {tab === "notas" && <NotesTab job={job} lastSeen={lastSeen} meId={me.id} />}
-        {tab === "historial" && <HistoryTab history={history} />}
+        {tab === "historial" && me.isAdmin && <HistoryTab history={history} />}
+          </div>
+
+          <aside className="flex min-w-0 flex-col gap-5">
+            <ClientCard job={job} />
+            <PaymentsSection job={job} me={me} money={money} />
+            <MoneyCard job={job} money={money} />
+          </aside>
+        </div>
       </article>
 
       {/* La lista sale de derecha a izquierda encima de la ficha (RF-12). */}
@@ -242,29 +283,17 @@ export function JobFile({
           <section
             aria-label="Lista de trabajos"
             onClick={(e) => e.stopPropagation()}
-            className="sheet absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l bg-side pt-5"
+            className="sheet absolute inset-y-0 right-0 flex w-full max-w-[580px] flex-col border-l bg-side pt-5"
             data-state="open"
           >
-            <header className="flex items-start justify-between px-4 pb-3">
-              <div>
-                <p className="mb-1 font-mono text-[11px] text-muted">02 · Trabajos</p>
-                <h1 className="text-2xl font-medium tracking-tight">Trabajos</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="hidden font-mono text-[11px] text-faint md:inline">Esc para cerrar</span>
-                <button type="button" aria-label="Cerrar lista" onClick={() => setListOpen(false)} className="press grid size-8 place-items-center rounded-md border text-muted hover-fine:hover:text-fg">
-                  <X className="size-4" />
-                </button>
-              </div>
-            </header>
-            <JobListCompact rows={rows} activeCode={job.code} canTake={me.canTake} onPick={() => setListOpen(false)} />
+            <JobsPanel rows={rows} activeCode={job.code} canTake={me.canTake} meId={me.id} isAdmin={me.isAdmin} onClose={() => setListOpen(false)} />
           </section>
         </div>
       )}
 
       <ReleaseDialog job={job} open={dialog === "release"} onOpenChange={(v) => setDialog(v ? "release" : null)} me={me} />
       <CorrectionDialog job={job} open={dialog === "correction"} onOpenChange={(v) => setDialog(v ? "correction" : null)} me={me} externos={externos} driveReady={driveReady} />
-      <EditDialog job={job} open={dialog === "edit"} onOpenChange={(v) => setDialog(v ? "edit" : null)} urgency={urgency} externos={externos} />
+      <EditDialog job={job} open={dialog === "edit" || dialog === "items"} onOpenChange={(v) => setDialog(v ? dialog : null)} urgency={urgency} externos={externos} itemsFirst={dialog === "items"} />
       <CancelDialog job={job} open={dialog === "cancel"} onOpenChange={(v) => setDialog(v ? "cancel" : null)} driveReady={driveReady} />
       <ClientSummaryDialog data={summary} onClose={() => setSummary(null)} />
     </div>
@@ -272,7 +301,7 @@ export function JobFile({
 }
 
 function NavBtn({ href, label, children }: { href: string | null; label: string; children: ReactNode }) {
-  const cls = "press grid size-[34px] place-items-center rounded-md border bg-surface";
+  const cls = "press grid size-9 place-items-center rounded-md bg-bg";
   return href ? (
     <Link href={href} aria-label={label} title={label} className={cn(cls, "hover-fine:hover:border-border-strong")}>
       {children}
@@ -310,6 +339,10 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
   const allDone = job.items.every((i) => i.doneAt);
   const canMark = mine || job.externoId || me.isAdmin;
   const hasRefund = job.payments.some((p) => p.kind === "devolucion" && !p.voidedAt);
+  // No se confirma sin el 50 % pagado (pedido de Mark, 27/11).
+  const halfMissing = round2(money.total / 2 - money.paid);
+  // El admin puede sacar a quien lo tomó o al externo (pedido de Mark, 27/11).
+  const removable = me.isAdmin && !mine && !unassigned;
 
   const continueJob = () =>
     openNewJob({
@@ -323,7 +356,9 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
     </Button>
   );
   const edit = (
-    <Button onClick={() => setDialog("edit")}>Editar</Button>
+    <Button onClick={() => setDialog("edit")}>
+      <Pencil /> Editar
+    </Button>
   );
 
   let actions: ReactNode;
@@ -354,7 +389,12 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
       <>
         {trash}
         {edit}
-        <Button variant="primary" onClick={() => run(() => confirmQuote(job.id), "Confirmado: ya está en Trabajos por tomar.")} disabled={pending}>
+        <Button
+          variant="primary"
+          onClick={() => run(() => confirmQuote(job.id), "Confirmado: ya está en Trabajos por tomar.")}
+          disabled={pending || halfMissing > 0.004}
+          title={halfMissing > 0.004 ? `Falta pagar ${formatMoney(halfMissing)} del 50 % para confirmar` : undefined}
+        >
           <Check /> Confirmar
         </Button>
       </>
@@ -375,7 +415,12 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
         {trash}
         {edit}
         <Button onClick={() => setDialog("correction")}>Pidió correcciones</Button>
-        <Button variant="primary" onClick={() => run(() => finalizeJob(job.id), "Finalizado.")} disabled={pending}>
+        <Button
+          variant="primary"
+          onClick={() => run(() => finalizeJob(job.id), "Finalizado.")}
+          disabled={pending || money.pending > 0.004}
+          title={money.pending > 0.004 ? `Falta cobrar ${formatMoney(money.pending)}: registra el pago para poder finalizar` : undefined}
+        >
           <CircleCheck /> Finalizar
         </Button>
       </>
@@ -388,6 +433,11 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
         {mine && (
           <Button variant="ghost" className="border" onClick={() => setDialog("release")}>
             <Undo2 /> Soltar
+          </Button>
+        )}
+        {removable && (
+          <Button variant="ghost" className="border" onClick={() => setDialog("release")} title="Sacarlo del trabajo: vuelve a Por tomar">
+            <UserMinus /> Sacar a {(job.externo?.name ?? job.responsible?.name ?? "").split(" ")[0]}
           </Button>
         )}
         {unassigned && me.canTake ? (
@@ -407,7 +457,7 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
       <>
         {trash}
         {edit}
-        {!unassigned && (mine || job.externoId || me.isAdmin) && (
+        {s === "en_proceso" && (
           <Button onClick={() => setDialog("correction")}>
             <Wrench className="!size-3.5" /> Corrección <span className="font-mono text-[11px] font-normal text-muted">{job.correctionRounds}/2</span>
           </Button>
@@ -417,10 +467,15 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
             <Undo2 /> Soltar
           </Button>
         )}
+        {removable && (
+          <Button variant="ghost" className="border" onClick={() => setDialog("release")} title="Sacarlo del trabajo: vuelve a Por tomar">
+            <UserMinus /> Sacar a {(job.externo?.name ?? job.responsible?.name ?? "").split(" ")[0]}
+          </Button>
+        )}
         {unassigned ? (
           <>
             <Button disabled title="Primero alguien tiene que tomarlo">
-              Marcar terminado
+              <Check /> Marcar terminado
             </Button>
             {me.canTake && <TakeButton jobId={job.id} primary />}
           </>
@@ -432,7 +487,7 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
               title={allDone ? undefined : "Marca todos los ítems primero"}
               onClick={() => run(() => markFinished(job.id), "Terminado · por enviar.")}
             >
-              Marcar terminado
+              <Check /> Marcar terminado
             </Button>
           )
         )}
@@ -450,22 +505,71 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
 
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="flex items-center gap-2 font-mono text-xs text-muted">
-          {job.code} {stateTag ?? urg}
-        </p>
-        <h2 className="mt-2 mb-1 text-[22px] leading-tight font-medium tracking-[-0.025em] md:text-[26px]">{job.title}</h2>
-        <p className="text-[15px] text-muted">
-          <Link href={`/clientes/${job.client.id}`} className="underline decoration-border-strong underline-offset-[3px] hover-fine:hover:text-fg">
-            {job.client.name}
-          </Link>
-          {[job.university ?? job.client.university, job.client.career].filter(Boolean).map((x) => ` · ${x}`)}
-        </p>
+      <div className="flex min-w-0 items-start gap-5">
+        <span className="hidden size-[62px] shrink-0 place-items-center rounded-xl border bg-surface text-fg-2 sm:grid" aria-hidden>
+          <CategoryGlyph code={job.items[0]?.categoryCode} />
+        </span>
+        <div className="min-w-0">
+          <h1 className="text-[24px] leading-tight font-semibold tracking-[-0.02em] md:text-[32px]">{job.title}</h1>
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[16px] text-muted">
+            <span className="font-mono text-[15px]">{job.code}</span>
+            <span className="text-faint">·</span>
+            <Link href={`/clientes/${job.client.id}`} className="hover-fine:hover:text-fg hover-fine:hover:underline">
+              {job.client.name}
+            </Link>
+            {[job.university ?? job.client.university, job.client.career].filter(Boolean).length > 0 && (
+              <>
+                <span className="text-faint">·</span>
+                <span>{[job.university ?? job.client.university, job.client.career].filter(Boolean).join(" · ")}</span>
+              </>
+            )}
+            {stateTag ?? urg}
+          </p>
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      <div className="flex flex-wrap items-center gap-2.5 [&_button]:h-11 [&_button]:px-4 [&_button]:text-[15px]">{actions}</div>
       {money.state === "de_mas" && <span className="sr-only">Pagado de más</span>}
     </header>
   );
+}
+
+/** Casilla grande de prioridad (Mark, 27/11): el color dice qué tan urgente es. */
+function PriorityTile({ u, pct }: { u: JobJSON["urgency"]; pct: number }) {
+  const look = {
+    urgente: { box: "border-danger-line bg-danger/10", tile: "bg-danger/15 text-danger", text: "text-fg", icon: <Zap className="size-6" strokeWidth={1.8} />, label: "Urgente" },
+    alta: { box: "border-warning-line bg-warning/10", tile: "bg-warning/15 text-warning", text: "text-fg", icon: <ChevronsUp className="size-6" strokeWidth={1.8} />, label: "Alta" },
+    normal: { box: "border-border bg-bg/40", tile: "bg-line text-fg-2", text: "text-fg", icon: <Diamond className="size-5" strokeWidth={1.8} />, label: "Normal" },
+  }[u];
+  return (
+    <div className={cn("flex h-full min-h-[120px] items-center gap-4 rounded-xl border px-5 py-4", look.box)}>
+      <span className={cn("grid size-14 shrink-0 place-items-center rounded-xl", look.tile)}>{look.icon}</span>
+      <div className="min-w-0">
+        <p className="text-[14px] text-muted">Prioridad</p>
+        <p className={cn("mt-1 text-[24px] font-semibold tracking-[-0.01em]", look.text)}>{look.label}</p>
+        <p className="mt-1 text-[15px] text-muted">{pct > 0 ? "Recargo +" + pct + "%" : "Sin recargo"}</p>
+      </div>
+    </div>
+  );
+}
+
+/** «por nivel» → «2 niveles», «por elevación» → «2 elevaciones». */
+function unitLabel(unit: string | null | undefined, n: number) {
+  const u = (unit ?? "").replace(/^por\s+/, "");
+  if (n === 1 || !u) return u;
+  if (/ción$/.test(u)) return u.replace(/ción$/, "ciones");
+  if (/[aeiouáéó]$/.test(u)) return u + "s";
+  if (/z$/.test(u)) return u.replace(/z$/, "ces");
+  return u + "es";
+}
+
+/** Ícono del tipo de trabajo según la categoría del ítem principal. */
+function CategoryGlyph({ code }: { code?: string }) {
+  const c = code ?? "";
+  if (["PL", "PC", "DE"].includes(c)) return <Compass className="size-7" strokeWidth={1.6} />;
+  if (["LA", "LG", "PA"].includes(c)) return <Presentation className="size-7" strokeWidth={1.6} />;
+  if (["MD", "BIM", "MQ"].includes(c)) return <Box className="size-7" strokeWidth={1.6} />;
+  if (["DOC", "GEN"].includes(c)) return <FileText className="size-7" strokeWidth={1.6} />;
+  return <Ruler className="size-7" strokeWidth={1.6} />;
 }
 
 /* ---------- Franjas por estado ---------- */
@@ -522,19 +626,52 @@ function StateBanner({ job, money, me }: { job: JobJSON; money: Money; me: Me })
         </p>
       </div>
     );
+  if (s === "cotizacion") {
+    const half = round2(money.total / 2);
+    const missing = round2(half - money.paid);
+    return (
+      <div className="enter flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
+        <span>
+          Cotización.{" "}
+          {missing > 0.004 ? (
+            <>
+              Para <b className="font-medium">Confirmar</b> el cliente tiene que pagar al menos el 50 % ({formatMoney(half)}).{" "}
+              <span className="text-warning">Falta {formatMoney(missing)}.</span>
+            </>
+          ) : (
+            <span className="text-success">Ya pagó el 50 %: se puede confirmar.</span>
+          )}
+        </span>
+        {missing > 0.004 && (
+          <Button size="sm" onClick={() => openPayment(job.id)}>
+            Registrar adelanto
+          </Button>
+        )}
+      </div>
+    );
+  }
   if (s === "terminado")
     return (
-      <p className="enter rounded-lg border border-info-line bg-info-soft px-4 py-2.5 text-[13px]">
+      <p className="enter rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
         Listo para enviar. Mándale el avance o la versión final por WhatsApp y marca <b className="font-medium">Enviado al cliente</b>.
       </p>
     );
   if (s === "en_revision")
     return (
-      <p className="enter flex flex-wrap items-center justify-between gap-2 rounded-lg border border-info-line bg-info-soft px-4 py-2.5 text-[13px]">
+      <p className="enter flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
         <span>
           Esperando al cliente. Si pide cambios, <b className="font-medium">Pidió correcciones</b> lo devuelve a Correcciones. Si lo aprueba, <b className="font-medium">Finalizar</b>.
         </span>
-        {job.sentAt && <span className="font-mono text-[11px] text-muted">enviado {timeAgo(job.sentAt)}</span>}
+        {money.pending > 0.004 ? (
+          <span className="flex items-center gap-2 text-warning">
+            Para finalizar falta cobrar {formatMoney(money.pending)}
+            <Button size="sm" onClick={() => openPayment(job.id)}>
+              Registrar pago
+            </Button>
+          </span>
+        ) : (
+          job.sentAt && <span className="font-mono text-[11px] text-muted">enviado {timeAgo(job.sentAt)}</span>
+        )}
       </p>
     );
   if (money.state === "de_mas") {
@@ -586,33 +723,34 @@ function StatusSteps({ job, history }: { job: JobJSON; history: HistoryEntry[] }
         {nextStep && job.status !== "cancelado" && job.status !== "finalizado" && <span className="font-mono text-[11px]">Sigue: {STATUS_LABEL[nextStep].replace(" por el cliente", "")}</span>}
       </p>
     </div>
-    <ol aria-label="Estado del trabajo" className={cn("hidden md:flex", job.status === "cancelado" || job.status === "finalizado" ? "opacity-60" : "")}>
+    <ol aria-label="Estado del trabajo" className={cn("hidden md:flex", job.status === "cancelado" || job.status === "finalizado" ? "opacity-70" : "")}>
       {STATUS_STEPS.map((step, i) => {
         const done = i < cur || (job.status === "finalizado" && i === cur);
         const current = i === cur && job.status !== "finalizado";
         const last = i === STATUS_STEPS.length - 1;
-        const label = step === "en_proceso" && job.status === "correcciones" ? `Correcciones ${Math.min(job.correctionRounds, 2)} de 2` : STATUS_LABEL[step];
+        const first = i === 0;
+        const label = step === "en_proceso" && job.status === "correcciones" ? `Correcciones ${Math.min(job.correctionRounds, 2)} de 2` : STATUS_LABEL[step].replace(" por el cliente", "");
         const fin = job.status === "finalizado" && step === "finalizado";
+        const date = current ? `desde ${dayMonth(job.statusChangedAt)}` : done && dates[step] ? dayMonth(dates[step]!) : step === "en_revision" ? "por el cliente" : "";
         return (
-          <li key={step} className={cn("flex min-w-0 flex-col gap-[7px]", last ? "flex-none items-end" : "flex-1")}>
-            <span className="flex w-full items-center">
+          <li key={step} className="relative flex flex-1 flex-col items-center gap-2 text-center">
+            {!first && <span className={cn("absolute top-[13px] right-1/2 left-0 h-0.5", i <= cur ? (fin || job.status === "finalizado" ? "bg-success" : i === cur ? "bg-info" : "bg-fg") : "bg-border")} />}
+            {!last && <span className={cn("absolute top-[13px] right-0 left-1/2 h-0.5", i < cur ? (job.status === "finalizado" ? "bg-success" : i + 1 === cur ? "bg-info" : "bg-fg") : "bg-border")} />}
+            <span className="relative z-[1] grid size-7 place-items-center rounded-full bg-bg">
               {done ? (
-                <span className={cn("step-pop grid size-4 shrink-0 place-items-center rounded-full", fin ? "bg-success" : "bg-fg")} style={{ "--i": i } as React.CSSProperties}>
-                  <Check className="size-2.5 text-bg" strokeWidth={3.5} />
+                <span className={cn("step-pop grid size-7 place-items-center rounded-full", fin ? "bg-success" : "bg-fg")} style={{ "--i": i } as React.CSSProperties}>
+                  <Check className="size-4 text-bg" strokeWidth={3} />
                 </span>
               ) : current ? (
-                <span className="grid size-4 shrink-0 place-items-center rounded-full border-[1.5px] border-info">
-                  <span className="size-1.5 rounded-full bg-info" />
+                <span className="grid size-7 place-items-center rounded-full border-[3px] border-info">
+                  <span className="size-2.5 rounded-full bg-info" />
                 </span>
               ) : (
-                <span className="size-4 shrink-0 rounded-full border border-border-strong" />
+                <span className="size-7 rounded-full border-2 border-border-strong" />
               )}
-              {!last && <span className={cn("mx-1.5 h-px flex-1", i < cur ? "bg-fg" : "bg-border")} />}
             </span>
-            <span className={cn("text-xs leading-tight", current ? "text-fg" : done ? (fin ? "text-success" : "text-muted") : "text-faint", step === "en_revision" && "max-w-20")}>{label}</span>
-            <span className="h-3 font-mono text-[10.5px] text-faint">
-              {current && dates[step] ? `desde ${dayMonth(job.statusChangedAt)}` : done && dates[step] ? dayMonth(dates[step]!) : current ? `desde ${dayMonth(job.statusChangedAt)}` : ""}
-            </span>
+            <span className={cn("text-[16px] leading-tight", current ? "font-medium text-fg" : done ? (fin ? "text-success" : "text-fg") : "text-muted")}>{label}</span>
+            <span className="-mt-1 h-4 text-[14px] text-muted">{date}</span>
           </li>
         );
       })}
@@ -622,18 +760,6 @@ function StatusSteps({ job, history }: { job: JobJSON; history: HistoryEntry[] }
 }
 
 /* ---------- Resumen ---------- */
-
-function Cell({ label, children, className, opt }: { label: string; children: ReactNode; className?: string; opt?: boolean }) {
-  return (
-    <div className={cn("min-w-0 px-4 py-3", className)}>
-      <p className="font-mono text-[11px] text-muted">
-        {label}
-        {opt && <span className="text-faint"> · opcional</span>}
-      </p>
-      <div className="mt-1 truncate text-sm">{children}</div>
-    </div>
-  );
-}
 
 function InlineAdd({ jobId, field, value, disabled }: { jobId: string; field: "course" | "professor"; value: string | null; disabled: boolean }) {
   const { run } = useAct();
@@ -655,9 +781,9 @@ function InlineAdd({ jobId, field, value, disabled }: { jobId: string; field: "c
   if (value) return <span>{value}</span>;
   return (
     <span className="text-faint">
-      Sin indicar{" "}
+      —{" "}
       {!disabled && (
-        <button type="button" onClick={() => setEdit(true)} className="ml-1.5 text-xs text-info">
+        <button type="button" onClick={() => setEdit(true)} className="ml-6 text-[15px] text-info">
           + Agregar
         </button>
       )}
@@ -665,50 +791,84 @@ function InlineAdd({ jobId, field, value, disabled }: { jobId: string; field: "c
   );
 }
 
+function DataCell({ icon, label, children, className }: { icon: ReactNode; label: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={cn("flex min-w-0 items-start gap-4 px-5 py-4", className)}>
+      <span className="mt-1 text-muted [&>svg]:size-6" aria-hidden>
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[14px] text-muted">{label}</p>
+        <div className="mt-1 truncate text-[17px] font-medium">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; late: boolean; closed: boolean; factor: number | null }) {
   const today = dayKey(job.dueAt) === todayLima();
   const moved = job.originalDueAt && dayKey(job.originalDueAt) !== dayKey(job.dueAt);
+  const near = ["Hoy", "Mañana"].includes(dueLabel(job.dueAt));
+  const due = (near ? dueLabel(job.dueAt) + " · " + weekdayShort(job.dueAt).toLowerCase() : weekdayShort(job.dueAt)) + " " + dayMonthNum(job.dueAt);
   return (
-    <div className="grid grid-cols-2 overflow-hidden rounded-lg border bg-surface md:grid-cols-4 [&>*]:border-line [&>*:nth-child(n+3)]:border-t md:[&>*:nth-child(n+3)]:border-t-0 md:[&>*:nth-child(n+5)]:border-t [&>*:nth-child(odd)]:border-r md:[&>*:not(:nth-child(4n))]:border-r">
-      <Cell label="Entrega">
-        <span className={late ? "text-danger" : today ? "text-warning" : ""}>
-          {["Hoy", "Mañana"].includes(dueLabel(job.dueAt)) ? `${dueLabel(job.dueAt)} · ${weekdayShort(job.dueAt).toLowerCase()}` : weekdayShort(job.dueAt)} {dayMonthNum(job.dueAt)}
-        </span>
-        {moved && <span className="ml-1.5 text-xs text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
-      </Cell>
-      <Cell label="Responsable">
-        {job.externo ? (
-          <span>
-            Externo · {job.externo.name} <span className="text-xs text-faint">· sin acceso</span>
+    <div className="overflow-hidden rounded-xl border bg-surface">
+      {/* Entrega · Responsable / Ciclo · Correcciones a la izquierda; la Prioridad ocupa una casilla grande a la derecha (Mark, 27/11). */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
+          <DataCell icon={<CalendarDays strokeWidth={1.6} />} label="Entrega" className="border-line sm:border-r">
+            <span
+              className={cn(
+                "inline-flex rounded-md px-2.5 py-0.5",
+                late ? "border border-danger-line bg-danger-soft text-danger" : today ? "border border-warning-line bg-warning-soft text-warning" : "",
+              )}
+            >
+              {due}
+            </span>
+            {moved && <span className="ml-2 text-xs font-normal text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
+          </DataCell>
+          <DataCell icon={<UserRound strokeWidth={1.6} />} label="Responsable">
+          {job.externo ? (
+            <span>
+              {job.externo.name} <span className="text-xs font-normal text-faint">· externo</span>
+            </span>
+          ) : job.responsible ? (
+            <span>{job.responsible.id === me.id ? "Tú · " + job.responsible.name : job.responsible.name}</span>
+          ) : job.status === "cotizacion" ? (
+            <span className="font-normal text-faint">Cuando se confirme</span>
+          ) : (
+            <span className="text-warning">Por tomar</span>
+          )}
+          </DataCell>
+          <div className="col-span-full mx-5 border-t border-line" />
+          <DataCell icon={<Layers strokeWidth={1.6} />} label="Ciclo de la carrera" className="border-line sm:border-r">
+            {job.cycle} {factor && factor !== 1 && <span className="font-mono text-[16px]">× {factor.toFixed(2)}</span>}
+          </DataCell>
+          <DataCell icon={<MessageSquare strokeWidth={1.6} />} label="Correcciones">
+            {job.correctionRounds} de 2
+          </DataCell>
+        </div>
+        <div className="border-line p-3 lg:border-l">
+          <PriorityTile u={job.urgency} pct={job.urgencyPct} />
+        </div>
+      </div>
+      <div className="mx-5 border-t border-line" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 sm:[&>*:not(:last-child)]:border-r [&>*]:border-line">
+        <DataCell icon={<GraduationCap strokeWidth={1.6} />} label="Curso">
+          <span className="text-[15px] font-normal">
+            <InlineAdd jobId={job.id} field="course" value={job.course} disabled={closed && !me.isAdmin} />
           </span>
-        ) : job.responsible ? (
-          <span>{job.responsible.id === me.id ? `Tú · ${job.responsible.name}` : job.responsible.name}</span>
-        ) : job.status === "cotizacion" ? (
-          <span className="text-faint">Cuando se confirme</span>
-        ) : (
-          <span className="text-warning">Por tomar</span>
-        )}
-      </Cell>
-      <Cell label="WhatsApp">
-        <a href={`https://wa.me/51${job.client.whatsapp}`} target="_blank" rel="noreferrer" className="hover-fine:hover:underline">
-          {formatPhone(job.client.whatsapp)}
-        </a>
-      </Cell>
-      <Cell label="Registrado">
-        {dayMonth(job.createdAt)} · {job.createdBy?.name ?? "—"}
-      </Cell>
-      <Cell label="Curso" opt>
-        <InlineAdd jobId={job.id} field="course" value={job.course} disabled={closed && !me.isAdmin} />
-      </Cell>
-      <Cell label="Profesor" opt>
-        <InlineAdd jobId={job.id} field="professor" value={job.professor} disabled={closed && !me.isAdmin} />
-      </Cell>
-      <Cell label="Ciclo de la carrera">
-        {job.cycle} {factor && factor !== 1 && <span className="ml-1 font-mono text-xs text-muted">×{factor.toFixed(2)}</span>}
-      </Cell>
-      <Cell label="Correcciones">
-        {job.correctionRounds} <span className="text-muted">de 2 incluidas</span>
-      </Cell>
+        </DataCell>
+        <DataCell icon={<Presentation strokeWidth={1.6} />} label="Profesor">
+          <span className="text-[15px] font-normal">
+            <InlineAdd jobId={job.id} field="professor" value={job.professor} disabled={closed && !me.isAdmin} />
+          </span>
+        </DataCell>
+        <DataCell icon={<BookOpen strokeWidth={1.6} />} label="Registrado">
+          <span className="text-[15px] font-normal">
+            {dayMonth(job.createdAt)} · {job.createdBy?.name ?? "—"}
+          </span>
+        </DataCell>
+      </div>
     </div>
   );
 }
@@ -733,11 +893,14 @@ function ItemsSection({ job, me, closed, onSummary, onEdit }: { job: JobJSON; me
     });
 
   return (
-    <section>
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-3 text-[15px] font-medium">
+    <section className="overflow-hidden rounded-xl border bg-surface">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
+        <h3 className="flex items-center gap-3.5 text-[19px] font-semibold">
+          <FileText className="size-6 text-muted" strokeWidth={1.6} />
           Lo que se cobra
-          <span className="inline-flex items-center gap-2 font-mono text-[11.5px] font-normal text-muted">
+        </h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 text-[14px] text-muted">
             <span className="inline-flex gap-1">
               {optimistic.map((i) => (
                 <span key={i.id} className={cn("size-2.5 rounded-[3px] transition-colors duration-200", i.done ? "bg-fg" : "border border-border-strong")} />
@@ -745,24 +908,23 @@ function ItemsSection({ job, me, closed, onSummary, onEdit }: { job: JobJSON; me
             </span>
             {doneCount} de {optimistic.length}
           </span>
-        </h3>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={onSummary}>
-            <FileText /> Resumen para el cliente
+          <Button size="md" variant="ghost" className="border" onClick={onSummary} title="Resumen para el cliente">
+            <FileText /> <span className="hidden 2xl:inline">Resumen para el cliente</span>
+            <span className="2xl:hidden">Resumen</span>
           </Button>
           {(!closed || me.isAdmin) && (
-            <Button size="sm" variant="ghost" className="border" onClick={onEdit}>
-              Editar ítems
+            <Button size="md" onClick={onEdit}>
+              <Pencil /> Editar ítems
             </Button>
           )}
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg border bg-surface">
+      <div>
         {job.items.map((it, idx) => {
           const done = optimistic.find((o) => o.id === it.id)?.done ?? false;
           const who = it.doneByExterno?.name ?? it.doneBy?.name;
           return (
-            <div key={it.id} className={cn("grid min-h-11 grid-cols-[22px_48px_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2 md:grid-cols-[22px_54px_minmax(0,1fr)_90px_120px_44px_90px]", idx > 0 && "border-t border-line")}>
+            <div key={it.id} className={cn("grid min-h-16 grid-cols-[22px_auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2.5 md:grid-cols-[22px_64px_minmax(0,1fr)_110px_92px_96px] md:gap-x-4 md:px-5 2xl:grid-cols-[22px_64px_minmax(0,1fr)_110px_110px_92px_96px]", idx > 0 && "border-t border-line")}>
               <button
                 type="button"
                 role="checkbox"
@@ -777,33 +939,32 @@ function ItemsSection({ job, me, closed, onSummary, onEdit }: { job: JobJSON; me
               >
                 {done && <Check className="check-mark size-3 text-bg" strokeWidth={3} />}
               </button>
-              <span className={cn("font-mono text-xs", done ? "text-faint" : "text-muted")}>{it.code}</span>
-              <span className={cn("min-w-0 truncate text-sm transition-colors duration-200", done && "text-faint line-through decoration-faint")}>
+              <span className={cn("inline-flex h-8 items-center justify-center rounded-md border bg-bg px-2 font-mono text-[13px] whitespace-nowrap", done ? "text-faint" : "text-muted")}>{it.code}</span>
+              <span className={cn("min-w-0 truncate text-[16px] transition-colors duration-200", done && "text-faint line-through decoration-faint")}>
                 {it.categoryCode === "OT" ? (it.detail ?? it.name) : it.name}
               </span>
               <span className="text-right font-mono text-[13px] md:hidden">{formatMoney(it.amount)}</span>
-              <span className="hidden truncate text-[13px] text-faint md:block">
-                {it.quantity} {it.unit?.replace(/^por\s+/, "")}
-                {it.quantity !== 1 && "s"}
+              <span className="hidden truncate text-[15px] text-muted 2xl:block">
+                {it.quantity} {unitLabel(it.unit, it.quantity)}
               </span>
               <span className="hidden md:block">
                 {done && who ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-muted">
-                    <span className="grid size-[22px] place-items-center rounded-full border border-border-strong bg-bg font-mono text-[9.5px] text-fg">{initials(who)}</span>
+                  <span className="inline-flex items-center gap-2.5 text-[15px] whitespace-nowrap text-muted">
+                    <span className="grid size-8 place-items-center rounded-full border border-border-strong bg-bg text-[11px] font-semibold text-fg">{initials(who)}</span>
                     {it.doneAt && dayMonth(it.doneAt)}
                   </span>
                 ) : !done && !["cotizacion", "cancelado", "finalizado"].includes(job.status) ? (
-                  <span className="text-xs text-warning">falta</span>
+                  <span className="inline-flex h-7 items-center rounded-md bg-warning-soft px-2.5 text-[14px] font-medium text-warning">falta</span>
                 ) : null}
               </span>
-              <span className="hidden font-mono text-xs text-faint md:block">{it.hours} h</span>
-              <span className={cn("hidden text-right font-mono text-sm md:block", done && "text-faint")}>{formatMoney(it.amount)}</span>
+              <span className="hidden text-[15px] text-muted md:block">{it.hours} h aprox.</span>
+              <span className={cn("hidden text-right text-[17px] font-semibold tabular-nums md:block", done && "text-faint")}>{formatMoney(it.amount)}</span>
             </div>
           );
         })}
-        <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-line px-4 py-2.5 text-[13px] text-muted">
+        <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-line px-5 py-3 text-[14px] text-muted">
           <span>
-            ≈ <span className="font-mono text-fg">{hours} h</span> de trabajo
+            <span className="font-mono text-fg">{hours} h</span> de trabajo aprox.
           </span>
           <span>
             {job.urgency === "normal" ? "Normal" : job.urgency === "alta" ? "Alta" : "Urgente"} <span className={cn("font-mono", job.urgencyPct ? "text-danger" : "text-fg")}>+{job.urgencyPct} %</span>
@@ -854,19 +1015,35 @@ function PaymentsSection({ job, me, money }: { job: JobJSON; me: Me; money: Mone
   const [voiding, setVoiding] = useState<{ id: string; amount: number; label: string } | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const closed = job.status === "finalizado" || job.status === "cancelado";
-  const dot = { sin_pagar: "bg-danger", adelanto: "bg-warning", pagado: "bg-success", de_mas: "bg-warning" }[money.state];
   const cancelled = job.status === "cancelado";
+  const tone = { sin_pagar: "border-danger-line bg-danger-soft text-danger", adelanto: "border-warning-line bg-warning-soft text-warning", pagado: "border-success-line bg-success-soft text-success", de_mas: "border-warning-line bg-warning-soft text-warning" }[money.state];
   return (
-    <section>
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2.5 text-[15px] font-medium">
+    <section className="overflow-hidden rounded-xl border bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+        <h3 className="flex items-center gap-3.5 text-[19px] font-semibold">
+          <WalletCards className="size-6 text-muted" strokeWidth={1.6} />
           Pagos
-          <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full border px-2 text-xs font-normal">
-            <span className={cn("size-1.5 rounded-full", dot)} />
-            {PAY_STATE_LABEL[money.state]}
-          </span>
         </h3>
-        <div className="flex gap-2">
+        <span className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[14px]", tone)}>
+          {money.state === "pagado" && <Check className="size-4" strokeWidth={2.4} />}
+          {PAY_STATE_LABEL[money.state]}
+        </span>
+      </div>
+      <div className="px-5">
+        {job.payments.length === 0 && <p className="py-5 text-center text-[14px] text-faint">{job.status === "cotizacion" ? "Sin pagos todavía: para confirmar debe pagar el 50 %." : "Aún no hay pagos."}</p>}
+        {job.payments.map((p) => (
+          <PaymentRow
+            key={p.id}
+            p={p}
+            me={me}
+            menuOpen={menu === p.id}
+            setMenu={(v) => setMenu(v ? p.id : null)}
+            onVoid={() => setVoiding({ id: p.id, amount: p.amount, label: p.kind === "devolucion" ? "Devolución" : "Pago" })}
+          />
+        ))}
+      </div>
+      {(!cancelled || ((!closed || me.isAdmin) && money.paid > 0)) && (
+        <div className="flex justify-end gap-2 border-t border-line px-5 py-3">
           {(!closed || me.isAdmin) && money.paid > 0 && (
             <Button size="sm" variant="danger" onClick={() => openRefund({ jobId: job.id })}>
               Devolución
@@ -874,79 +1051,11 @@ function PaymentsSection({ job, me, money }: { job: JobJSON; me: Me; money: Mone
           )}
           {!cancelled && (
             <Button size="sm" onClick={() => openPayment(job.id)}>
-              Registrar pago
+              <Plus /> Registrar pago
             </Button>
           )}
         </div>
-      </div>
-      <div className="overflow-x-auto rounded-lg border bg-surface">
-        <table className="w-full min-w-[560px] border-collapse">
-          <thead>
-            <tr className="text-left font-mono text-[11px] text-muted">
-              <th className="px-4 py-2.5 font-normal">Fecha</th>
-              <th className="px-4 py-2.5 font-normal">Medio · operación</th>
-              <th className="px-4 py-2.5 font-normal">Registró</th>
-              <th className="px-4 py-2.5 text-right font-normal">Monto</th>
-              <th className="w-10" />
-            </tr>
-          </thead>
-          <tbody>
-            {job.payments.length === 0 && (
-              <tr className="border-t border-line">
-                <td colSpan={5} className="px-4 py-4 text-center text-[13px] text-faint">
-                  {job.status === "cotizacion" ? "Sin pagos: es una cotización." : "Aún no hay pagos."}
-                </td>
-              </tr>
-            )}
-            {job.payments.map((p) => (
-              <PaymentRow
-                key={p.id}
-                p={p}
-                me={me}
-                menuOpen={menu === p.id}
-                setMenu={(v) => setMenu(v ? p.id : null)}
-                onVoid={() => setVoiding({ id: p.id, amount: p.amount, label: p.kind === "devolucion" ? "Devolución" : "Pago" })}
-              />
-            ))}
-            <tr className="border-t">
-              <td colSpan={5} className="px-4 py-3">
-                <div className="flex flex-wrap items-baseline justify-end gap-x-8 gap-y-1 text-[13px] text-muted">
-                  {money.extras > 0 ? (
-                    <span>
-                      Precio pactado <span className="ml-1.5 font-mono text-fg">{formatMoney(job.price)}</span>
-                      <span className="mx-2 text-faint">+</span>Extras <span className="ml-1 font-mono text-warning">{formatMoney(money.extras)}</span>
-                      <span className="mx-2 text-faint">=</span>Total <span className="ml-1 font-mono text-fg">{formatMoney(money.total)}</span>
-                    </span>
-                  ) : (
-                    <span>
-                      Precio <span className="ml-1.5 font-mono text-fg">{formatMoney(money.total)}</span>
-                    </span>
-                  )}
-                  <span>
-                    Pagado <span className="ml-1.5 font-mono text-fg">{formatMoney(money.paid)}</span>
-                  </span>
-                  {money.state === "de_mas" ? (
-                    <span>
-                      Pagado de más <span className="ml-1.5 font-mono text-lg text-warning">{formatMoney(round2(money.paid - money.total))}</span>
-                    </span>
-                  ) : (
-                    <span>
-                      Pendiente{" "}
-                      {cancelled ? (
-                        <>
-                          <span className="ml-1.5 font-mono text-lg text-faint line-through">{formatMoney(Math.max(0, money.total - money.paid))}</span> <span className="text-faint">no se cobra</span>
-                        </>
-                      ) : (
-                        <span className={cn("ml-1.5 font-mono text-lg", money.pending > 0 ? "text-warning" : "text-success")}>{formatMoney(money.pending)}</span>
-                      )}
-                    </span>
-                  )}
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      )}
       <VoidPaymentDialog payment={voiding} onClose={() => setVoiding(null)} />
     </section>
   );
@@ -956,27 +1065,30 @@ function PaymentRow({ p, me, menuOpen, setMenu, onVoid }: { p: JobJSON["payments
   const voided = !!p.voidedAt;
   const refund = p.kind === "devolucion";
   return (
-    <>
-      <tr className={cn("border-t border-line text-sm", voided && "text-faint line-through")}>
-        <td className="px-4 py-[11px] font-mono text-[13px] text-muted">{dayMonthNum(p.paidAt)}/{p.paidAt.slice(0, 4)}</td>
-        <td className="px-4 py-[11px]">
+    <div className="border-b border-line py-3 last:border-b-0">
+      <div className={cn("group relative grid grid-cols-[10px_92px_minmax(0,1fr)_auto] items-center gap-3 text-[15px]", voided && "text-faint line-through")}>
+        <span className={cn("size-2 rounded-full", voided ? "bg-faint" : refund ? "bg-danger" : "bg-success")} />
+        <span className="font-mono text-[14px] text-muted">
+          {dayMonthNum(p.paidAt)}/{p.paidAt.slice(0, 4)}
+        </span>
+        <span className="min-w-0 truncate" title={"Registró " + (p.createdBy?.name ?? "—")}>
           {METHOD_LABEL[p.method]}
-          {p.operationNumber && ` · ${p.operationNumber}`}
+          {p.operationNumber && " · " + p.operationNumber}
           {p.label && p.label !== "Pago" && <span className={cn("ml-2 text-xs", refund ? "text-danger" : p.label.startsWith("extra") ? "text-warning" : "text-faint")}>{p.label.toLowerCase()}</span>}
-        </td>
-        <td className="px-4 py-[11px] text-muted">{p.createdBy?.name ?? "—"}</td>
-        <td className={cn("px-4 py-[11px] text-right font-mono", refund && !voided && "text-danger")}>
-          {refund ? "− " : ""}
-          {formatMoney(p.amount)}
-        </td>
-        <td className="relative px-2">
+          <span className="block text-xs text-faint no-underline">{p.createdBy?.name ?? "—"}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className={cn("font-semibold tabular-nums", refund && !voided && "text-danger")}>
+            {refund ? "− " : ""}
+            {formatMoney(p.amount)}
+          </span>
           {me.isAdmin && !voided && (
-            <>
+            <span className="relative">
               <button type="button" aria-label="Más acciones del pago" onClick={() => setMenu(!menuOpen)} className="press grid size-7 place-items-center rounded text-muted hover-fine:hover:bg-hover">
                 <MoreHorizontal className="size-4" />
               </button>
               {menuOpen && (
-                <div className="pop-in absolute top-9 right-2 z-10 w-44 overflow-hidden rounded-md border bg-surface py-1 text-[13px] shadow-[0_12px_32px_rgba(0,0,0,0.35)]" style={{ transformOrigin: "top right" }}>
+                <div className="pop-in absolute top-8 right-0 z-10 w-44 overflow-hidden rounded-md border bg-surface py-1 text-[13px] shadow-[0_12px_32px_rgba(0,0,0,0.35)]" style={{ transformOrigin: "top right" }}>
                   <button
                     type="button"
                     onClick={() => {
@@ -989,28 +1101,82 @@ function PaymentRow({ p, me, menuOpen, setMenu, onVoid }: { p: JobJSON["payments
                   </button>
                 </div>
               )}
-            </>
-          )}
-        </td>
-      </tr>
-      {voided && (
-        <tr>
-          <td colSpan={5} className="px-4 pb-2.5">
-            <span className="inline-block rounded bg-danger-soft px-2 py-1 text-xs text-danger">
-              Anulado por {p.voidedBy?.name ?? "—"} · {p.voidedAt && dayMonthNum(p.voidedAt)} · «{p.voidReason}»
             </span>
-            <span className="ml-2 text-xs text-faint">No suma a lo pagado; lo pendiente vuelve a subir.</span>
-          </td>
-        </tr>
+          )}
+        </span>
+      </div>
+      {voided && (
+        <p className="mt-2 ml-[22px] rounded bg-danger-soft px-2 py-1 text-xs text-danger">
+          Anulado por {p.voidedBy?.name ?? "—"} · {p.voidedAt && dayMonthNum(p.voidedAt)} · «{p.voidReason}»
+        </p>
       )}
-      {refund && p.reason && !voided && (
-        <tr>
-          <td colSpan={5} className="px-4 pb-2.5 text-xs text-muted">
-            {p.reason}
-          </td>
-        </tr>
-      )}
-    </>
+      {refund && p.reason && !voided && <p className="mt-1 ml-[22px] text-xs text-muted">{p.reason}</p>}
+    </div>
+  );
+}
+
+/** Cliente (rediseño 27/11): con WhatsApp y llamada a un toque. */
+function ClientCard({ job }: { job: JobJSON }) {
+  return (
+    <section className="overflow-hidden rounded-xl border bg-surface">
+      <h3 className="flex items-center gap-3.5 border-b border-line px-5 py-3.5 text-[19px] font-semibold">
+        <Users className="size-6 text-muted" strokeWidth={1.6} />
+        Cliente
+      </h3>
+      <div className="flex items-center gap-3.5 px-5 py-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-line text-[16px] font-semibold">{initials(job.client.name)}</span>
+        <Link href={"/clientes/" + job.client.id} className="min-w-0 flex-1 hover-fine:hover:underline">
+          <span className="block truncate text-[17px] font-medium">{job.client.name}</span>
+          <span className="block font-mono text-[13px] text-muted">{formatPhone(job.client.whatsapp)}</span>
+        </Link>
+        <a href={"https://wa.me/51" + job.client.whatsapp} target="_blank" rel="noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" className="press grid size-12 place-items-center rounded-lg border bg-bg text-success hover-fine:hover:border-success-line">
+          <MessageCircle className="size-6" strokeWidth={1.7} />
+        </a>
+        <a href={"tel:+51" + job.client.whatsapp} aria-label="Llamar" title="Llamar" className="press grid size-12 place-items-center rounded-lg border bg-bg hover-fine:hover:border-border-strong">
+          <Phone className="size-5" strokeWidth={1.7} />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/** Resumen económico (rediseño 27/11). */
+function MoneyCard({ job, money }: { job: JobJSON; money: Money }) {
+  const cancelled = job.status === "cancelado";
+  const row = (k: ReactNode, v: ReactNode, cls?: string) => (
+    <div className="flex items-baseline justify-between border-b border-line py-3 last:border-b-0">
+      <span className="text-[16px] text-fg-2">{k}</span>
+      <span className={cn("text-[17px] font-semibold tabular-nums", cls)}>{v}</span>
+    </div>
+  );
+  return (
+    <section className="overflow-hidden rounded-xl border bg-surface">
+      <h3 className="flex items-center gap-3.5 border-b border-line px-5 py-3.5 text-[19px] font-semibold">
+        <Coins className="size-6 text-muted" strokeWidth={1.6} />
+        Resumen económico
+      </h3>
+      <div className="px-5 py-1">
+        {money.extras > 0 && row("Precio pactado", formatMoney(job.price))}
+        {money.extras > 0 && row("Extras", formatMoney(money.extras), "text-warning")}
+        {row("Precio total", formatMoney(money.total))}
+        {row("Pagado", formatMoney(money.paid), money.paid > 0 ? "text-success" : "")}
+        {money.state === "de_mas"
+          ? row("Pagado de más", formatMoney(round2(money.paid - money.total)), "text-warning")
+          : cancelled
+            ? row(
+                <>
+                  Pendiente <span className="text-xs text-faint">no se cobra</span>
+                </>,
+                <span className="text-faint line-through">{formatMoney(Math.max(0, money.total - money.paid))}</span>,
+              )
+            : row("Pendiente", formatMoney(money.pending), money.pending > 0 ? "text-warning" : "text-success")}
+      </div>
+      <p className="border-t border-line px-5 py-2.5 text-[13px] text-muted">
+        {job.urgency === "normal" ? "Normal" : job.urgency === "alta" ? "Alta" : "Urgente"} <span className={job.urgencyPct ? "text-danger" : ""}>+{job.urgencyPct} %</span>
+        {job.complexityExtra > 0 && <> · adicional {formatMoney(job.complexityExtra)}</>}
+        {job.discount > 0 && <> · descuento − {formatMoney(job.discount)}</>}
+      </p>
+    </section>
   );
 }
 

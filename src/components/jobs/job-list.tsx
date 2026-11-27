@@ -101,9 +101,10 @@ function DueCell({ r }: { r: JobRow }) {
 const GRID = "md:grid-cols-[10px_minmax(0,1.6fr)_180px_minmax(0,1fr)_120px_90px]";
 
 /** Lista a toda la pantalla de la pestaña Trabajos (RF-12). */
-export function JobTable({ rows, canTake, footer, actions }: { rows: JobRow[]; canTake: boolean; footer?: ReactNode; actions?: ReactNode }) {
-  const [tab, setTab] = useState<ListTab>("curso");
-  const [q, setQ] = useState("");
+export function JobTable({ rows, canTake, footer, actions, initialQ = "" }: { rows: JobRow[]; canTake: boolean; footer?: ReactNode; actions?: ReactNode; initialQ?: string }) {
+  // Desde el buscador del Inicio se busca en todos, también en los cerrados.
+  const [tab, setTab] = useState<ListTab>(initialQ ? "todos" : "curso");
+  const [q, setQ] = useState(initialQ);
   const search = useSearchKey();
   const counts = useMemo(() => ({ curso: filterRows(rows, "curso", "").length }), [rows]);
   const visible = filterRows(rows, tab, q);

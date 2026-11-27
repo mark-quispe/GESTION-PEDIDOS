@@ -25,17 +25,24 @@ export default async function JobPage({ params }: PageProps<"/trabajos/[code]">)
     touchJobView(user.id, job.id),
   ]);
 
+  // El historial lo ve solo el admin (pedido de Mark, 27/11). Al empleado solo le llegan las fechas de los pasos.
+  const admin = user.isAdmin && !user.viewAsEmployee;
+  const steps = ["confirmó la cotización", "lo marcó terminado", "terminó la corrección"];
+  const visibleHistory = admin
+    ? history
+    : history.filter((h) => steps.some((k) => h.summary?.includes(k))).map((h) => ({ ...h, userName: null, before: null, after: null }));
+
   return (
     <JobFile
       job={JSON.parse(JSON.stringify(job))}
-      history={history.map((h) => ({ ...h, createdAt: h.createdAt.toISOString() }))}
+      history={visibleHistory.map((h) => ({ ...h, createdAt: h.createdAt.toISOString() }))}
       rows={rows}
       externos={externos.map((e) => ({ id: e.id, name: e.name }))}
       me={{ id: user.id, name: user.name, isAdmin: user.isAdmin && !user.viewAsEmployee, canTake: user.canTake }}
       urgency={settings.urgency}
       lastSeen={lastSeen?.toISOString() ?? null}
       driveReady={isDriveReady(settings)}
-      studio={{ name: settings.studioName, whatsapp: settings.whatsapp, facebook: settings.facebook, instagram: settings.instagram }}
+      studio={{ name: settings.studioName, whatsapp: settings.whatsapp, facebook: settings.facebook, instagram: settings.instagram, logoUrl: settings.logoUrl }}
     />
   );
 }

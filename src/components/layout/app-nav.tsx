@@ -169,6 +169,7 @@ export function Sidebar({ user, studioName, system }: { user: NavUser; studioNam
     <nav aria-label="Principal" className="sticky top-0 hidden h-dvh w-[232px] shrink-0 flex-col border-r bg-side px-3.5 py-5 md:flex">
       <BrandTile name={studioName} className="mb-3.5 border-b px-1 pb-[18px]" />
       <div className="scroll-thin -mx-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1 pb-3">
+      {showAdmin && <p className="mb-1 px-3 font-mono text-[11px] text-muted">Operación</p>}
       {MAIN.map((it) => (
         <NavLink key={it.href} item={it} active={isActive(pathname, it.href)} />
       ))}

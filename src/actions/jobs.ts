@@ -153,6 +153,8 @@ export async function createJob(input: CreateJobInput): Promise<ActionResult<{ c
     const confirmed = v.initialStatus === "confirmado";
     const status: JobStatus = !confirmed ? "cotizacion" : v.who === "pozo" ? "confirmado" : "en_proceso";
     if (v.advance && v.advance.amount > total + 0.004) throw new UserError("El adelanto es mayor que el total.");
+    // Regla pedida por Mark (27/11): no se confirma sin el 50 % pagado.
+    if (confirmed && (v.advance?.amount ?? 0) + 0.004 < round2(total / 2)) throw new UserError(`Para confirmar, el adelanto debe ser al menos el 50 %: ${formatMoney(round2(total / 2))}.`);
 
     const queries = [];
     if (!clientId && v.newClient) {
@@ -187,7 +189,7 @@ export async function createJob(input: CreateJobInput): Promise<ActionResult<{ c
         professor: v.professor,
         section: v.section,
         university,
-        academicTerm: academicTermFor(dueAt),
+        academicTerm: s.academicTerm || academicTermFor(dueAt),
         software: v.software,
         deliveryFormat: v.deliveryFormat,
         dueAt,
@@ -305,6 +307,14 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
     const v = releaseSchema.parse(input);
     const job = await loadJob(v.jobId);
     if (job.responsibleId !== user.id && !user.isAdmin) throw new UserError("Solo quien lo tiene puede soltarlo.");
+    // El admin puede sacar a quien lo tomó o al externo (pedido de Mark, 27/11).
+    const removed = job.responsibleId !== user.id;
+    if (!job.responsibleId && !job.externoId) throw new UserError("Este trabajo no tiene a nadie asignado.");
+    const who = removed
+      ? job.externoId
+        ? (await db.query.externos.findFirst({ where: eq(externos.id, job.externoId) }))?.name ?? "el externo"
+        : (await db.query.users.findFirst({ where: eq(users.id, job.responsibleId!) }))?.name ?? "quien lo tenía"
+      : null;
     const items = await db.select().from(jobItems).where(eq(jobItems.jobId, job.id));
     const pending = items.filter((i) => !i.doneAt);
     const doneItems = items.filter((i) => i.doneAt);
@@ -313,6 +323,7 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
         .update(jobs)
         .set({
           responsibleId: null,
+          externoId: null,
           takenAt: null,
           status: job.status === "en_proceso" ? "confirmado" : job.status,
           statusChangedAt: job.status === "en_proceso" ? new Date() : job.statusChangedAt,
@@ -323,8 +334,9 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
         entityId: job.id,
         jobId: job.id,
         action: "soltar",
-        summary:
-          pending.length && doneItems.length
+        summary: removed
+          ? `sacó a ${who} del trabajo${v.note ? ` · «${v.note}»` : ""}`
+          : pending.length && doneItems.length
             ? `soltó el trabajo: hizo ${doneItems.map((i) => i.code).join(", ")}; falta ${pending.map((i) => i.code).join(", ")}`
             : "soltó el trabajo",
         after: { hechos: doneItems.map((i) => i.code), faltan: pending.map((i) => i.code), nota: v.note },
@@ -425,6 +437,14 @@ export async function markSent(jobId: string): Promise<ActionResult> {
 export async function finalizeJob(jobId: string): Promise<ActionResult> {
   try {
     const user = await assertRole();
+    // Regla pedida por Mark (27/11): no se finaliza con pagos pendientes.
+    const job = await loadJob(jobId);
+    const [pays, extras] = await Promise.all([
+      db.select().from(payments).where(and(eq(payments.jobId, jobId), isNull(payments.deletedAt))),
+      db.select().from(jobExtras).where(and(eq(jobExtras.jobId, jobId), isNull(jobExtras.deletedAt))),
+    ]);
+    const pending = round2(job.price + extras.reduce((a, e) => a + e.amount, 0) - paidNet(pays));
+    if (pending > 0.004) throw new UserError(`No se puede finalizar: falta cobrar ${formatMoney(pending)}. Registra el pago primero.`);
     await moveStatus(user, jobId, ["en_revision", "terminado"], "finalizado", "lo finalizó: el cliente quedó conforme", { finishedAt: new Date(), finishedById: user.id });
     done();
     return { ok: true };
@@ -462,7 +482,7 @@ export async function requestCorrection(input: CorrectionInput): Promise<ActionR
     const v = parsed.data;
     const job = await loadJob(v.jobId);
     if (!["en_proceso", "en_revision", "terminado", "correcciones"].includes(job.status)) throw new UserError("Este trabajo no está para correcciones.");
-    if (v.who === "yo" && !user.canTake) throw new UserError("«Yo la tomo» es solo para quien tiene el rol Producción.");
+    // Las correcciones también las puede hacer el empleado (pedido de Mark, 27/11).
     const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(jobCorrections).where(eq(jobCorrections.jobId, job.id));
     const number = n + 1;
     const counts = v.charge !== "error_estudio";
@@ -783,6 +803,15 @@ export async function reopenJob(jobId: string): Promise<ActionResult> {
 export async function confirmQuote(jobId: string): Promise<ActionResult> {
   try {
     const user = await assertRole();
+    // Regla pedida por Mark (27/11): no se confirma sin el 50 % pagado.
+    const job = await loadJob(jobId);
+    const [pays, extras] = await Promise.all([
+      db.select().from(payments).where(and(eq(payments.jobId, jobId), isNull(payments.deletedAt))),
+      db.select().from(jobExtras).where(and(eq(jobExtras.jobId, jobId), isNull(jobExtras.deletedAt))),
+    ]);
+    const half = round2((job.price + extras.reduce((a, e) => a + e.amount, 0)) / 2);
+    const missing = round2(half - paidNet(pays));
+    if (missing > 0.004) throw new UserError(`Para confirmar falta pagar ${formatMoney(missing)} (el 50 % es ${formatMoney(half)}). Registra el adelanto primero.`);
     await moveStatus(user, jobId, ["cotizacion"], "confirmado", "confirmó la cotización");
     done();
     return { ok: true };

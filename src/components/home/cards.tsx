@@ -131,7 +131,7 @@ export function LateCard({ rows, className }: { rows: JobRow[]; className?: stri
   );
 }
 
-export function PendingCard({ data, badge, className }: { data: Dashboard["pending"]; badge?: number; className?: string }) {
+export function PendingCard({ data, badge, overdueDays = 3, className }: { data: Dashboard["pending"]; badge?: number; overdueDays?: number; className?: string }) {
   return (
     <HomeCard title="Pendientes por cobrar" tone="warning" aside={formatMoney(data.total)} badge={badge} className={className}>
       {data.rows.length === 0 ? (
@@ -146,8 +146,8 @@ export function PendingCard({ data, badge, className }: { data: Dashboard["pendi
             sub={r.title}
             right={
               <>
-                <span className={cn("block font-mono text-[13px]", r.finishedAgo !== null && "text-warning")}>{formatMoney(r.pending)}</span>
-                {r.finishedAgo !== null && <span className="block text-xs text-warning">finalizado hace {r.finishedAgo} {r.finishedAgo === 1 ? "día" : "días"}</span>}
+                <span className={cn("block font-mono text-[13px]", r.finishedAgo !== null && r.finishedAgo >= overdueDays && "text-warning")}>{formatMoney(r.pending)}</span>
+                {r.finishedAgo !== null && r.finishedAgo >= overdueDays && <span className="block text-xs text-warning">finalizado hace {r.finishedAgo} {r.finishedAgo === 1 ? "día" : "días"}</span>}
               </>
             }
           />
@@ -252,22 +252,12 @@ export function LoadQuotesCard({ load, quotes, badge, className }: { load: Dashb
 
 /** RF-49: tarjeta Trabajos (el pozo). Tomar aparece a la izquierda de la fecha al pasar el mouse. */
 export function PoolCard({ pool, hot, canTake, className }: { pool: JobRow[]; hot: JobRow[]; canTake: boolean; className?: string }) {
-  const hotIds = new Set(hot.map((h) => h.id));
-  const rest = pool.filter((p) => !hotIds.has(p.id));
+  // Design final: solo lo que está por tomar, por fecha de entrega (los atrasados también salen en Atrasados).
+  const rest = [...pool].sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  void hot;
   return (
     <HomeCard title="Trabajos" aside={`${pool.length} por tomar`} className={className}>
-      {hot.map((r) => (
-        <Link key={r.id} href={`/trabajos/${r.code}`} className="row grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line px-4 py-[7px]">
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-medium">{r.title}</span>
-            <span className="mt-px block truncate text-xs text-muted">
-              <span className="font-mono text-[11px]">{r.code}</span> · {r.clientName} · {r.responsibleName ?? r.externoName ?? <span className="text-warning">por tomar</span>}
-            </span>
-          </span>
-          <Pill tone="danger">{r.late ? `+${r.lateDays} ${r.lateDays === 1 ? "día" : "días"}` : "Urgente"}</Pill>
-        </Link>
-      ))}
-      {rest.length === 0 && hot.length === 0 && <EmptyRow>No hay trabajos por tomar.</EmptyRow>}
+      {rest.length === 0 && <EmptyRow>No hay trabajos por tomar.</EmptyRow>}
       {rest.map((r) => {
         const missing = r.itemsDone > 0 && r.itemsDone < r.itemsTotal;
         const soon = dayKey(r.dueAt) <= addDays(todayLima(), 1);
@@ -287,7 +277,7 @@ export function PoolCard({ pool, hot, canTake, className }: { pool: JobRow[]; ho
                   <TakeButton jobId={r.id} />
                 </span>
               )}
-              <span className={cn("font-mono text-[11.5px]", soon || r.late ? "text-warning" : "text-muted")}>{dueLabel(r.dueAt, new Date(), today)}</span>
+              <span className={cn("font-mono text-[11.5px]", r.late ? "text-danger" : soon ? "text-warning" : "text-muted")}>{r.late ? `+${r.lateDays} ${r.lateDays === 1 ? "día" : "días"}` : dueLabel(r.dueAt, new Date(), today)}</span>
             </span>
           </Link>
         );

@@ -42,6 +42,7 @@ export async function registerPayment(input: PaymentInput): Promise<ActionResult
         method: v.method,
         paidAt: paidInstant(v.paidDate),
         operationNumber: v.operationNumber,
+        reason: v.note,
         label,
         createdById: user.id,
       }),

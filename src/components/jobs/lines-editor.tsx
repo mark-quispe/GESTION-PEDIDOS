@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import type { TarifaItem } from "@/lib/queries/catalog";
 import { round2 } from "@/lib/domain";
 import { cn } from "@/lib/utils";
@@ -110,7 +110,7 @@ export function LinesEditor({
                 <p className="text-xs text-faint">Sin factor por ciclo. El recargo por urgencia se suma en el total.</p>
               </div>
             ) : (
-              <div key={l.key} className={cn("enter grid grid-cols-[52px_minmax(0,1fr)_112px_76px_28px] items-center gap-2.5 px-3 py-2", i > 0 && "border-t border-line")}>
+              <div key={l.key} className={cn("enter grid grid-cols-[52px_minmax(0,1fr)_112px_76px_84px] items-center gap-2.5 px-3 py-2", i > 0 && "border-t border-line")}>
                 <span className="font-mono text-[11px] text-muted">{l.code}</span>
                 <span className="min-w-0">
                   <span className={cn("block truncate text-[13.5px]", l.done && "text-faint line-through")}>{l.name}</span>
@@ -122,10 +122,17 @@ export function LinesEditor({
                 <Stepper label={`Cantidad de ${l.code}`} value={l.quantity} min={1} onChange={(v) => update(l.key, { quantity: v })} size="sm" />
                 <span className="text-right font-mono text-[13px]">{lineTotal(l, factor).toFixed(2)}</span>
                 {l.done ? (
-                  <span className="text-center font-mono text-[10px] text-faint" title="Ya está hecho">✓</span>
+                  <span className="text-center text-[11px] text-faint" title="Ya está hecho: no se puede quitar">✓ hecho</span>
                 ) : (
-                  <button type="button" aria-label={`Quitar ${l.code}`} onClick={() => setLines((p) => p.filter((x) => x.key !== l.key))} className="press grid size-7 place-items-center rounded text-muted hover-fine:hover:text-fg">
-                    <X className="size-3.5" />
+                  <button
+                    type="button"
+                    aria-label={`Quitar ${l.code}`}
+                    title={lines.length === 1 ? "Agrega otro ítem antes de quitar el último" : `Quitar ${l.code} del pedido`}
+                    disabled={lines.length === 1}
+                    onClick={() => setLines((p) => p.filter((x) => x.key !== l.key))}
+                    className="press inline-flex h-7 items-center justify-center gap-1 rounded-md border border-danger-line px-2 text-xs text-danger hover-fine:enabled:hover:bg-danger-soft disabled:opacity-35"
+                  >
+                    <Trash2 className="size-3.5" /> Quitar
                   </button>
                 )}
               </div>

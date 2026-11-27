@@ -1,3 +1,4 @@
+import type { PaymentMethod } from "@/db/schema";
 import "server-only";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
@@ -48,6 +49,8 @@ export type JobRow = {
   payState: PayState;
   itemsTotal: number;
   itemsDone: number;
+  /** Medios con que pagó (para el filtro «Medio»). */
+  methods: PaymentMethod[];
   late: boolean;
   lateDays: number;
   correctionRounds: number;
@@ -90,7 +93,7 @@ export async function listJobs(opts: { includeClosed?: boolean } = {}): Promise<
   const ids = rows.map((r) => r.id);
   const [pays, extras, items] = await Promise.all([
     db
-      .select({ jobId: payments.jobId, kind: payments.kind, amount: payments.amount, voidedAt: payments.voidedAt })
+      .select({ jobId: payments.jobId, kind: payments.kind, amount: payments.amount, voidedAt: payments.voidedAt, method: payments.method })
       .from(payments)
       .where(and(inArray(payments.jobId, ids), isNull(payments.deletedAt))),
     db
@@ -129,6 +132,7 @@ export async function listJobs(opts: { includeClosed?: boolean } = {}): Promise<
       payState: payState(total, paid),
       itemsTotal: it?.total ?? 0,
       itemsDone: it?.done ?? 0,
+      methods: [...new Set((payBy.get(r.id) ?? []).filter((p) => !p.voidedAt && p.kind === "pago").map((p) => p.method))],
       late: isLate(r.status, r.dueAt, now),
       lateDays: lateDays(r.status, r.dueAt, now),
     };

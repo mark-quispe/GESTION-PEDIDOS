@@ -38,6 +38,7 @@ export function ClientDetail({ c, jobs, isAdmin, usualPerson }: { c: ClientDetai
   const router = useRouter();
   const { openNewJob } = useJobDialogs();
   const [dialog, setDialog] = useState<null | "edit" | "prefs" | "obs" | "delete">(null);
+  const [reason, setReason] = useState("");
   const [, start] = useTransition();
   const open = jobs.filter((j) => !["finalizado", "cancelado", "cotizacion"].includes(j.status));
   const pendingJobs = jobs.filter((j) => j.status !== "cancelado" && j.status !== "cotizacion" && j.pending > 0);
@@ -223,7 +224,7 @@ export function ClientDetail({ c, jobs, isAdmin, usualPerson }: { c: ClientDetai
                 <HoldButton
                   onConfirm={() =>
                     start(async () => {
-                      const r = await deleteClient(c.id);
+                      const r = await deleteClient(c.id, reason);
                       if (!r.ok) return void toast.error(r.error);
                       toast.success("Cliente eliminado. Está en Eliminados.");
                       router.push("/clientes");
@@ -237,6 +238,10 @@ export function ClientDetail({ c, jobs, isAdmin, usualPerson }: { c: ClientDetai
             }
           >
             <p className="text-sm text-muted">Tiene {jobs.length} trabajos registrados.</p>
+            <label className="mt-3 block">
+              <span className="mb-1.5 block text-[13px] text-muted">Motivo <span className="font-mono text-[11px] text-faint">· opcional</span></span>
+              <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ej.: duplicado de otro cliente" className="h-10 w-full rounded-md border bg-bg px-3 text-sm outline-none placeholder:text-faint focus:border-muted" />
+            </label>
           </DialogContent>
         )}
       </DialogRoot>

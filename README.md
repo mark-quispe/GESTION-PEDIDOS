@@ -86,6 +86,15 @@ El login solo pide nombre y correo. El permiso de Drive es aparte: lo da el admi
 - **Aviso de mismo curso (RF-35):** compara curso y universidad del cliente, y además profesor y ciclo cuando están llenos en ambos trabajos. Excluye los trabajos del mismo cliente (esos los cubre RF-37).
 - **Importar (RF-28):** se omiten las filas con errores y se importa el resto; un mismo archivo no se puede importar dos veces. La carga inicial no crea carpetas en Drive (se crean desde la ficha); la contingencia sí (RF-34).
 - **Borrar archivos:** van a la papelera de Drive (30 días para recuperarlos).
+- **Usuarios (RF-04):** la tabla «Qué puede cada rol» sigue la tabla 2.1 v0.9 (Producción = Empleado + Tomar), no la del artboard. Admin incluye todo y se guarda solo; el último admin no se puede quitar.
+- **Producción (RF-18):** el interruptor Activo solo cambia a los externos; el acceso de alguien del estudio se cambia en Usuarios. Las etiquetas de cada persona del estudio son las categorías que más horas hizo (no se le pone «qué hace»).
+- **Servicios:** las casillas con flechas se guardan solas al dejar de moverlas (0,7 s) y cada cambio queda en el Historial. Cambiar el tarifario no toca los trabajos ya registrados.
+- **Importar (RF-28):** la columna «Ítems» acepta códigos del tarifario («PL-02 x2, PL-06»). Sin ítems, la fila entra como Personalizado con su descripción y precio.
+- **Respaldo:** la hora (03:00) la fija el cron de Vercel; en Configuración se puede pausar, no cambiar la hora. El aviso de Drive lleno se mide en GB.
+- **Finalizar (pedido de Mark, 27/11):** un trabajo no pasa a Finalizado si le falta cobrar algo. El botón queda desactivado y el servidor lo rechaza. El documento de requerimientos (sección «sin reglas en la v1») debe actualizarse con esta regla.
+- **Correcciones (pedido de Mark, 27/11):** el empleado también registra y hace correcciones. En la ventana de corrección puede elegir «Yo la tomo» aunque no tenga el rol Producción, y luego marca «Corrección hecha». Tomar trabajos nuevos del pozo sigue siendo solo de Producción y del admin.
+- **Confirmar (pedido de Mark, 27/11):** un trabajo solo pasa a Confirmado con al menos el 50 % pagado. En Nuevo trabajo el adelanto mínimo es el 50 %; una cotización se confirma después de registrar ese adelanto.
+- **Logo del estudio:** se guarda como imagen pequeña (máx. 150 KB) en la base, sin depender de Drive.
 
 ## Pendientes con el dueño (sección 9 del documento)
 
