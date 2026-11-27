@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { themeScript } from "@/lib/theme";
+import { InlineScript } from "@/components/layout/inline-script";
 
 const workSans = Work_Sans({ variable: "--font-work-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -15,8 +16,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ecebe6" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
+    { color: "#121212" },
   ],
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // suppressHydrationWarning: el script de tema añade data-theme antes de hidratar.
     <html lang="es" suppressHydrationWarning className={`${workSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <InlineScript html={themeScript} />
       </head>
       <body className="min-h-full">{children}</body>
     </html>

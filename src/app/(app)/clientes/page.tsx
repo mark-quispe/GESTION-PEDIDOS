@@ -1,13 +1,12 @@
-import { requireUser } from "@/lib/auth-guard";
-import { PageBody, PageHeader } from "@/components/layout/page-header";
+import { Users } from "lucide-react";
 
 export const metadata = { title: "Clientes" };
 
-export default async function Page() {
-  await requireUser();
+export default function ClientsPage() {
   return (
-    <PageBody>
-      <PageHeader n="03" title="Clientes" description="Esta pestaña se está programando." />
-    </PageBody>
+    <div className="hidden flex-1 flex-col items-center justify-center gap-2 text-center md:flex">
+      <Users className="size-6 text-faint" strokeWidth={1.5} />
+      <p className="text-sm text-muted">Elige un cliente para ver sus trabajos, pagos y preferencias.</p>
+    </div>
   );
 }
