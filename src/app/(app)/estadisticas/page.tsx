@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { getStats, PERIOD_LABEL, type StatsPeriod } from "@/lib/queries/stats";
 import { METHOD_LABEL, initials } from "@/lib/domain";
 import { dayMonth } from "@/lib/dates";
-import { cn, formatMoney } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { PageBody } from "@/components/layout/page-header";
 import { Bars, ChartCard, Donut, HBars, Legend, Line, Spark, Stacked } from "@/components/stats/charts";
 

@@ -95,13 +95,13 @@ function MoneyCell({ r }: { r: JobRow }) {
 
 function DueCell({ r }: { r: JobRow }) {
   const today = dayKey(r.dueAt) === todayLima();
-  return <span className={cn("font-mono text-xs", r.late ? "text-danger" : today ? "text-warning" : "text-muted")}>{dueLabel(r.dueAt)}</span>;
+  return <span className={cn("font-mono text-xs", today && !r.late ? "text-warning" : "text-muted")}>{dueLabel(r.dueAt)}</span>;
 }
 
 const GRID = "md:grid-cols-[10px_minmax(0,1.6fr)_180px_minmax(0,1fr)_120px_90px]";
 
 /** Lista a toda la pantalla de la pestaña Trabajos (RF-12). */
-export function JobTable({ rows, canTake, footer }: { rows: JobRow[]; canTake: boolean; footer?: ReactNode }) {
+export function JobTable({ rows, canTake, footer, actions }: { rows: JobRow[]; canTake: boolean; footer?: ReactNode; actions?: ReactNode }) {
   const [tab, setTab] = useState<ListTab>("curso");
   const [q, setQ] = useState("");
   const search = useSearchKey();
@@ -111,7 +111,7 @@ export function JobTable({ rows, canTake, footer }: { rows: JobRow[]; canTake: b
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <ListControls tab={tab} setTab={setTab} q={q} setQ={setQ} inputRef={search} count={counts.curso} />
+      <ListControls tab={tab} setTab={setTab} q={q} setQ={setQ} inputRef={search} count={counts.curso} actions={actions} />
       <div className="enter overflow-hidden rounded-lg border bg-surface/85">
         <div className={cn("hidden gap-x-[18px] border-b px-[18px] py-2.5 font-mono text-[10.5px] text-muted md:grid", GRID)}>
           <span />
@@ -126,7 +126,6 @@ export function JobTable({ rows, canTake, footer }: { rows: JobRow[]; canTake: b
           <div key={g.key}>
             <p className={cn("border-t border-line px-4 pt-3 pb-1.5 font-mono text-[11px] first:border-t-0 md:px-[18px]", g.tone === "danger" ? "text-danger" : "text-muted")}>
               {g.label}
-              <span className="ml-2 text-faint">{g.rows.length}</span>
             </p>
             {g.rows.map((r) => (
               <Link
@@ -195,6 +194,7 @@ export function ListControls({
   inputRef,
   count,
   compact,
+  actions,
 }: {
   tab: ListTab;
   setTab: (t: ListTab) => void;
@@ -203,9 +203,11 @@ export function ListControls({
   inputRef?: React.RefObject<HTMLInputElement | null>;
   count: number;
   compact?: boolean;
+  actions?: ReactNode;
 }) {
   return (
     <div className={cn("flex flex-wrap items-center gap-2.5", compact && "flex-col items-stretch")}>
+      {actions}
       <label className="flex h-[38px] min-w-[220px] flex-1 items-center gap-2 rounded-md border bg-surface px-3 text-muted focus-within:border-muted">
         <Search className="size-4 shrink-0" strokeWidth={1.8} />
         <input

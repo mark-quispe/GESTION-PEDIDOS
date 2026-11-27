@@ -12,7 +12,6 @@ import {
   FolderOpen,
   List,
   MoreHorizontal,
-  Pencil,
   Plus,
   RotateCcw,
   Send,
@@ -324,9 +323,7 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
     </Button>
   );
   const edit = (
-    <Button onClick={() => setDialog("edit")}>
-      <Pencil className="!size-3.5" /> Editar
-    </Button>
+    <Button onClick={() => setDialog("edit")}>Editar</Button>
   );
 
   let actions: ReactNode;
@@ -675,7 +672,7 @@ function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; lat
     <div className="grid grid-cols-2 overflow-hidden rounded-lg border bg-surface md:grid-cols-4 [&>*]:border-line [&>*:nth-child(n+3)]:border-t md:[&>*:nth-child(n+3)]:border-t-0 md:[&>*:nth-child(n+5)]:border-t [&>*:nth-child(odd)]:border-r md:[&>*:not(:nth-child(4n))]:border-r">
       <Cell label="Entrega">
         <span className={late ? "text-danger" : today ? "text-warning" : ""}>
-          {["Hoy", "Mañana"].includes(dueLabel(job.dueAt)) ? `${dueLabel(job.dueAt)} · ${weekdayShort(job.dueAt).toLowerCase()}` : weekdayShort(job.dueAt)} {dayMonthNum(job.dueAt)} {timeLima(job.dueAt)}
+          {["Hoy", "Mañana"].includes(dueLabel(job.dueAt)) ? `${dueLabel(job.dueAt)} · ${weekdayShort(job.dueAt).toLowerCase()}` : weekdayShort(job.dueAt)} {dayMonthNum(job.dueAt)}
         </span>
         {moved && <span className="ml-1.5 text-xs text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
       </Cell>
