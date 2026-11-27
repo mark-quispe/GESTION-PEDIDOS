@@ -60,7 +60,7 @@ import { ClientSummaryDialog, type SummaryData } from "@/components/jobs/client-
 import { CancelDialog, CorrectionDialog, EditDialog, ReleaseDialog, VoidPaymentDialog } from "@/components/jobs/job-file-dialogs";
 import type { HistoryEntry, JobJSON, Me } from "@/components/jobs/types";
 
-type Studio = { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null };
+type Studio = { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null; logoUrl?: string | null };
 type Tab = "resumen" | "archivos" | "notas" | "historial";
 
 export function JobFile({
