@@ -53,7 +53,8 @@ import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/field";
 import { Avatar, TakeButton } from "@/components/jobs/bits";
-import { JobListCompact, filterRows } from "@/components/jobs/job-list";
+import { filterRows } from "@/components/jobs/job-list";
+import { JobsPanel } from "@/components/jobs/jobs-panel";
 import { JobActionButtons } from "@/components/jobs/job-buttons";
 import { useJobDialogs } from "@/components/jobs/job-dialogs";
 import { ClientSummaryDialog, type SummaryData } from "@/components/jobs/client-summary";
@@ -242,22 +243,10 @@ export function JobFile({
           <section
             aria-label="Lista de trabajos"
             onClick={(e) => e.stopPropagation()}
-            className="sheet absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l bg-side pt-5"
+            className="sheet absolute inset-y-0 right-0 flex w-full max-w-[580px] flex-col border-l bg-side pt-5"
             data-state="open"
           >
-            <header className="flex items-start justify-between px-4 pb-3">
-              <div>
-                <p className="mb-1 font-mono text-[11px] text-muted">02 · Trabajos</p>
-                <h1 className="text-2xl font-medium tracking-tight">Trabajos</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="hidden font-mono text-[11px] text-faint md:inline">Esc para cerrar</span>
-                <button type="button" aria-label="Cerrar lista" onClick={() => setListOpen(false)} className="press grid size-8 place-items-center rounded-md border text-muted hover-fine:hover:text-fg">
-                  <X className="size-4" />
-                </button>
-              </div>
-            </header>
-            <JobListCompact rows={rows} activeCode={job.code} canTake={me.canTake} onPick={() => setListOpen(false)} />
+            <JobsPanel rows={rows} activeCode={job.code} canTake={me.canTake} meId={me.id} onClose={() => setListOpen(false)} />
           </section>
         </div>
       )}
