@@ -44,10 +44,10 @@
   --info-line: rgba(88, 166, 255, 0.45);
   --scrim: rgba(0, 0, 0, 0.5);
   /* RF-51: única excepción a «color solo para estados». */
-  --pay-yape: #a371f7;
-  --pay-plin: #2dd4bf;
-  --pay-transferencia: #58a6ff;
-  --pay-efectivo: #f0883e;
+  --pay-yape: #9b6ae0;
+  --pay-plin: #14a39e;
+  --pay-transferencia: #2f7fe0;
+  --pay-efectivo: #d9772f;
 }
 
 :root[data-theme="light"] {
@@ -524,6 +524,31 @@
   .step-pop,
   .check-mark,
   .pop-in {
+    animation: none;
+  }
+}
+
+/* Estadísticas: barras horizontales crecen desde la izquierda, líneas se dibujan una vez. */
+.grow-x {
+  transform-origin: left;
+  animation: grow-x 560ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0.02);
+  }
+}
+.line-draw {
+  stroke-dasharray: 1;
+  animation: plan-draw 900ms var(--ease-out) 150ms both;
+}
+.donut-in {
+  animation: fade 500ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .grow-x,
+  .line-draw {
     animation: none;
   }
 }
