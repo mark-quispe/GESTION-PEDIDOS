@@ -366,21 +366,24 @@ export function EditDialog({
   onOpenChange,
   urgency,
   externos,
+  itemsFirst,
 }: {
   job: JobJSON;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   urgency: UrgencyConfig;
   externos: { id: string; name: string }[];
+  /** Desde «Editar ítems»: abre con la lista de ítems ya desplegada. */
+  itemsFirst?: boolean;
 }) {
   const [data, setData] = useState<NewJobData | null>(null);
   useEffect(() => {
     if (open && !data) getNewJobData().then(setData);
   }, [open, data]);
-  return <DialogRoot open={open} onOpenChange={onOpenChange}>{open && <EditForm job={job} close={() => onOpenChange(false)} cfg={urgency} externos={externos} data={data} />}</DialogRoot>;
+  return <DialogRoot open={open} onOpenChange={onOpenChange}>{open && <EditForm job={job} close={() => onOpenChange(false)} cfg={urgency} externos={externos} data={data} itemsFirst={itemsFirst} />}</DialogRoot>;
 }
 
-function EditForm({ job, close, cfg, externos, data }: { job: JobJSON; close: () => void; cfg: UrgencyConfig; externos: { id: string; name: string }[]; data: NewJobData | null }) {
+function EditForm({ job, close, cfg, externos, data, itemsFirst }: { job: JobJSON; close: () => void; cfg: UrgencyConfig; externos: { id: string; name: string }[]; data: NewJobData | null; itemsFirst?: boolean }) {
   const router = useRouter();
   const { openRefund } = useJobDialogs();
   const [pending, start] = useTransition();
@@ -404,7 +407,7 @@ function EditForm({ job, close, cfg, externos, data }: { job: JobJSON; close: ()
       done: !!i.doneAt,
     })),
   );
-  const [showItems, setShowItems] = useState(false);
+  const [showItems, setShowItems] = useState(!!itemsFirst);
   const [extra, setExtra] = useState(job.complexityExtra);
   const [discount, setDiscount] = useState(job.discount);
   const [course, setCourse] = useState(job.course ?? "");

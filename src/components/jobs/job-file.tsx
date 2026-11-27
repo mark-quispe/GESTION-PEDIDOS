@@ -111,7 +111,7 @@ export function JobFile({
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("resumen");
   const [listOpen, setListOpen] = useState(false);
-  const [dialog, setDialog] = useState<null | "release" | "correction" | "edit" | "cancel">(null);
+  const [dialog, setDialog] = useState<null | "release" | "correction" | "edit" | "items" | "cancel">(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
 
   // Navegación ‹ 3 de 12 › entre los trabajos en curso (J / K).
@@ -245,7 +245,7 @@ export function JobFile({
             {tab === "resumen" && (
               <div key="resumen" className="enter flex flex-col gap-5">
                 <DataGrid job={job} me={me} late={late} closed={closed} factor={factor} />
-                <ItemsSection job={job} me={me} closed={closed} onSummary={() => setSummary(summaryData())} onEdit={() => setDialog("edit")} />
+                <ItemsSection job={job} me={me} closed={closed} onSummary={() => setSummary(summaryData())} onEdit={() => setDialog("items")} />
                 {job.extras.length > 0 && <ExtrasSection job={job} />}
                 <RelatedSection job={job} />
                 {job.notes[0] && (
@@ -293,7 +293,7 @@ export function JobFile({
 
       <ReleaseDialog job={job} open={dialog === "release"} onOpenChange={(v) => setDialog(v ? "release" : null)} me={me} />
       <CorrectionDialog job={job} open={dialog === "correction"} onOpenChange={(v) => setDialog(v ? "correction" : null)} me={me} externos={externos} driveReady={driveReady} />
-      <EditDialog job={job} open={dialog === "edit"} onOpenChange={(v) => setDialog(v ? "edit" : null)} urgency={urgency} externos={externos} />
+      <EditDialog job={job} open={dialog === "edit" || dialog === "items"} onOpenChange={(v) => setDialog(v ? dialog : null)} urgency={urgency} externos={externos} itemsFirst={dialog === "items"} />
       <CancelDialog job={job} open={dialog === "cancel"} onOpenChange={(v) => setDialog(v ? "cancel" : null)} driveReady={driveReady} />
       <ClientSummaryDialog data={summary} onClose={() => setSummary(null)} />
     </div>
