@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import { AlertCircle, ChevronRight, CircleCheck, Clock3, Flag, LayoutGrid, Layers, Search, X } from "lucide-react";
+import { AlertCircle, Ban, CalendarDays, ChevronRight, CircleCheck, CircleDashed, Clock3, Coins, FileText, Flag, LayoutGrid, Layers, Search, UserRound, X } from "lucide-react";
 import type { JobRow } from "@/lib/queries/jobs";
 import { normalizeText, STATUS_SHORT } from "@/lib/domain";
 import { addDays, dayKey, dueLabel, todayLima, weekStart } from "@/lib/dates";
@@ -52,12 +52,24 @@ function dotClass(r: JobRow) {
 }
 
 function Estado({ r }: { r: JobRow }) {
-  const tone =
-    r.status === "en_proceso" || r.status === "en_revision" ? "text-info" : r.status === "correcciones" || r.status === "cotizacion" ? "text-warning" : r.status === "terminado" ? "text-fg" : r.status === "finalizado" ? "text-success" : "text-muted";
+  const st = r.status;
+  const look =
+    st === "en_proceso" || st === "en_revision"
+      ? { cls: "border-info-line bg-info-soft text-info", icon: <CircleDashed className="size-4" strokeWidth={2} /> }
+      : st === "terminado" || st === "finalizado"
+        ? { cls: "border-success-line bg-success-soft text-success", icon: <CircleCheck className="size-4" strokeWidth={2} /> }
+        : st === "cotizacion" || st === "correcciones"
+          ? { cls: "border-warning-line bg-warning-soft text-warning", icon: <FileText className="size-4" strokeWidth={2} /> }
+          : st === "cancelado"
+            ? { cls: "text-faint", icon: <Ban className="size-4" strokeWidth={2} /> }
+            : { cls: "text-fg-2", icon: <CircleCheck className="size-4" strokeWidth={2} /> };
   return (
-    <span className={cn("block truncate text-sm", tone)}>
-      {r.status === "terminado" ? "Terminado · por enviar" : STATUS_SHORT[r.status]}
-      {isPool(r) && r.itemsDone > 0 && r.itemsDone < r.itemsTotal && <span className="text-warning"> · falta {r.itemsTotal - r.itemsDone}</span>}
+    <span className="flex min-w-0 flex-col items-start gap-0.5">
+      <span className={cn("inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border px-2.5 text-[13px] whitespace-nowrap", look.cls)}>
+        {look.icon}
+        <span className="truncate" title={STATUS_SHORT[st]}>{st === "terminado" ? "Terminado" : STATUS_SHORT[st]}</span>
+      </span>
+      {isPool(r) && r.itemsDone > 0 && r.itemsDone < r.itemsTotal && <span className="pl-1 text-xs text-warning">falta {r.itemsTotal - r.itemsDone} de {r.itemsTotal}</span>}
     </span>
   );
 }
@@ -74,7 +86,10 @@ function Asignado({ r, canTake }: { r: JobRow; canTake: boolean }) {
   if (isPool(r))
     return (
       <span className="reveal inline-flex items-center gap-2.5">
-        <span className="text-sm whitespace-nowrap text-warning">Por tomar</span>
+        <span className="inline-flex items-center gap-2 text-sm whitespace-nowrap text-warning">
+          <UserRound className="size-[18px]" strokeWidth={1.8} />
+          Por tomar
+        </span>
         {canTake && (
           <span className="act">
             <TakeButton jobId={r.id} />
@@ -87,17 +102,32 @@ function Asignado({ r, canTake }: { r: JobRow; canTake: boolean }) {
 
 function Pago({ r }: { r: JobRow }) {
   if (r.status === "cancelado") return <span className="text-sm text-faint">—</span>;
-  if (r.status === "cotizacion") return <span className="text-sm text-muted tabular-nums">{formatMoney(r.total)}</span>;
-  if (r.pending <= 0.004) return <span className="text-sm text-success">Pagado</span>;
-  return <span className="text-sm font-semibold tabular-nums">{formatMoney(r.pending)}</span>;
+  if (r.status !== "cotizacion" && r.pending <= 0.004)
+    return (
+      <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-success-line bg-success-soft px-2.5 text-[13px] text-success">
+        <CircleCheck className="size-4" strokeWidth={2} />
+        Pagado
+      </span>
+    );
+  return (
+    <span className={cn("inline-flex items-center gap-2 text-sm font-semibold whitespace-nowrap tabular-nums", r.status === "cotizacion" && "font-normal text-muted")}>
+      <Coins className="size-[18px] text-muted" strokeWidth={1.8} />
+      {formatMoney(r.status === "cotizacion" ? r.total : r.pending)}
+    </span>
+  );
 }
 
 function Entrega({ r }: { r: JobRow }) {
   const today = dayKey(r.dueAt) === todayLima();
-  return <span className={cn("text-sm", today && !r.late ? "text-warning" : "text-muted")}>{isClosed(r) ? dueLabel(r.finishedAt ?? r.dueAt) : dueLabel(r.dueAt)}</span>;
+  return (
+    <span className={cn("inline-flex items-center gap-2 text-sm whitespace-nowrap", today && !r.late && !isClosed(r) ? "text-warning" : "text-fg-2")}>
+      <CalendarDays className="size-[18px] text-muted" strokeWidth={1.8} />
+      {isClosed(r) ? dueLabel(r.finishedAt ?? r.dueAt) : dueLabel(r.dueAt)}
+    </span>
+  );
 }
 
-const GRID = "md:grid-cols-[10px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_96px_70px] 2xl:grid-cols-[14px_minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)_110px_84px]";
+const GRID = "md:grid-cols-[10px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_118px_96px_14px] 2xl:grid-cols-[10px_minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,1fr)_130px_110px_14px]";
 
 /* ---------- Pantalla ---------- */
 
@@ -211,24 +241,17 @@ export function JobsBoard({ rows, canTake, last, initialQ = "", respName }: { ro
 
         {gs.length === 0 && <p className="rounded-lg border border-dashed px-5 py-12 text-center text-sm text-faint">{q ? `Nada coincide con «${q}».` : "No hay trabajos aquí."}</p>}
         {gs.map((g, gi) => (
-          <section key={g.key} className="enter overflow-hidden rounded-lg border bg-surface/85" style={{ "--i": gi + 4 } as React.CSSProperties}>
-            <h2 className={cn("flex items-center gap-3.5 border-b border-line px-5 py-3 text-[17px] font-medium", g.danger ? "text-danger" : "text-fg")}>
+          <section key={g.key} className="enter flex flex-col gap-2.5" style={{ "--i": gi + 4 } as React.CSSProperties}>
+            <h2 className={cn("flex items-center gap-3 px-1 text-[18px] font-semibold", g.danger ? "text-danger" : "text-fg")}>
               {g.label}
-              <span className="text-[15px] font-normal text-muted">{g.rows.length}</span>
+              <span className={cn("grid h-7 min-w-7 place-items-center rounded-full px-2 text-[13px] font-medium", g.danger ? "bg-danger-soft text-danger" : "bg-line text-fg-2")}>{g.rows.length}</span>
             </h2>
-            <div className={cn("hidden gap-x-4 border-b border-line px-5 py-2 text-[13px] text-muted md:grid 2xl:gap-x-5", GRID)}>
-              <span />
-              <span>Trabajo</span>
-              <span>Estado</span>
-              <span>Asignado</span>
-              <span>Pago</span>
-              <span className="text-right">Entrega</span>
-            </div>
+            <div className="overflow-hidden rounded-xl border bg-surface/85">
             {(g.key === "closed" && !allClosed && filter !== "finalizados" ? g.rows.slice(0, 5) : g.rows).map((r) => (
               <Link
                 key={r.id}
                 href={`/trabajos/${r.code}`}
-                className={cn("row grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-line px-4 py-2.5 last:border-b-0 md:gap-x-4 md:gap-y-0 md:px-5 2xl:gap-x-5", GRID)}
+                className={cn("row grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 border-b border-line px-4 py-2.5 last:border-b-0 md:gap-x-4 md:gap-y-0 md:px-5 2xl:gap-x-5", GRID)}
               >
                 <span className={cn("size-2.5 rounded-full", dotClass(r))} />
                 <span className="min-w-0">
@@ -252,9 +275,10 @@ export function JobsBoard({ rows, canTake, last, initialQ = "", respName }: { ro
                 <span className="hidden md:block">
                   <Pago r={r} />
                 </span>
-                <span className="hidden text-right md:block">
+                <span className="hidden md:block">
                   <Entrega r={r} />
                 </span>
+                <ChevronRight className="hidden size-4 text-muted md:block" />
               </Link>
             ))}
             {g.key === "closed" && !allClosed && filter !== "finalizados" && g.rows.length > 5 && (
@@ -262,6 +286,7 @@ export function JobsBoard({ rows, canTake, last, initialQ = "", respName }: { ro
                 Ver los {g.rows.length} finalizados y cancelados
               </button>
             )}
+            </div>
           </section>
         ))}
       </div>
