@@ -216,7 +216,7 @@ export function JobFile({
                   ["notas", "Notas", unreadNotes || null, NotebookPen],
                   ["historial", "Historial", null, History],
                 ] as const
-              ).map(([k, label, n, Icon]) => (
+              ).filter(([k]) => k !== "historial" || me.isAdmin).map(([k, label, n, Icon]) => (
                 <button
                   key={k}
                   role="tab"
@@ -261,7 +261,7 @@ export function JobFile({
             )}
                     {tab === "archivos" && <FilesTab job={job} me={me} driveReady={driveReady} />}
         {tab === "notas" && <NotesTab job={job} lastSeen={lastSeen} meId={me.id} />}
-        {tab === "historial" && <HistoryTab history={history} />}
+        {tab === "historial" && me.isAdmin && <HistoryTab history={history} />}
           </div>
 
           <aside className="flex min-w-0 flex-col gap-5">
