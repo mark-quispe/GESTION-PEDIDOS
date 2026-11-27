@@ -57,11 +57,11 @@ export function ServicesBoard({ data, admin, n }: { data: ServicesData; admin: b
           <p className="text-sm text-muted">{admin ? "El tarifario del estudio. Cada trabajo se arma con estos ítems; el prefijo del ítem principal da el código." : "El tarifario del estudio, para cotizar."}</p>
         </div>
         {admin ? (
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex h-10 items-center gap-2.5 rounded-md border bg-surface px-3 text-[13px] text-muted">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="inline-flex h-10 items-center gap-2.5 rounded-md border bg-surface px-3 text-[13px] whitespace-nowrap text-muted">
               Siguiente número <span className="font-mono text-sm text-fg">{jobCode(prefix, data.year, data.nextSeq)}</span>
             </span>
-            <button onClick={() => setCreating({ categoryId: cat?.isCustom ? regular[0]?.id : cat?.id })} className="press inline-flex h-10 items-center gap-2 rounded-md border border-primary bg-primary px-4 text-sm font-medium text-on-primary">
+            <button onClick={() => setCreating({ categoryId: cat?.isCustom ? regular[0]?.id : cat?.id })} className="press inline-flex h-10 items-center gap-2 rounded-md border border-primary bg-primary px-4 text-sm font-medium whitespace-nowrap text-on-primary">
               <Plus className="size-4" /> Nuevo ítem
             </button>
           </div>
@@ -166,7 +166,7 @@ function UrgencyRibbon({ data, admin, save }: { data: ServicesData; admin: boole
         const u = data.urgency[l];
         const days = l === "normal";
         return (
-          <div key={l} className={cn("flex items-center gap-2.5", i > 0 && "border-l border-line pl-[18px]")}>
+          <div key={l} className={cn("flex items-center gap-2.5", i > 0 && "lg:border-l lg:border-line lg:pl-[18px]")}>
             <span className="text-sm font-medium">{URGENCY_LABEL[l]}</span>
             {admin ? (
               <>

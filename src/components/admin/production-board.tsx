@@ -22,7 +22,7 @@ const PERIODS: { value: ProdPeriod; label: string }[] = [
   { value: "3m", label: "3 meses" },
   { value: "ano", label: "Año" },
 ];
-const SHADES = ["#ededed", "#a3a3a3", "#6b6b6b", "#4a4a4a", "#363636"];
+const SHADES = ["var(--fg)", "var(--muted)", "var(--bar)", "var(--border-strong)", "var(--border)"];
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 const fmtH = (h: number) => `${new Intl.NumberFormat("es-PE", { maximumFractionDigits: 1 }).format(h)} h`;
