@@ -140,7 +140,10 @@ export async function getStats(period: StatsPeriod) {
     ...people
       .filter((p) => p.roles.includes("produccion") || p.roles.includes("admin"))
       .map((p) => {
-        const t = taken.filter((a) => a.userId === p.id && inP(a.createdAt));
+        // Pedidos tomados: el historial «tomar» y, para lo que no tiene historial, quién lo tomó en la ficha.
+        const fromAudit = taken.filter((a) => a.userId === p.id && inP(a.createdAt)).map((a) => ({ jobId: a.jobId, at: a.createdAt }));
+        const fromJobs = allJobs.filter((j) => j.responsibleId === p.id && inP(j.takenAt)).map((j) => ({ jobId: j.id, at: j.takenAt! }));
+        const t = [...new Map([...fromJobs, ...fromAudit].map((x) => [x.jobId, x])).values()].map((x) => ({ createdAt: x.at }));
         const its = doneItems.filter((i) => i.doneById === p.id);
         return {
           id: p.id,
@@ -148,7 +151,7 @@ export async function getStats(period: StatsPeriod) {
           role: p.roles.includes("admin") ? "Admin" : "Producción",
           ext: false,
           taken: t.length,
-          takenPrev: taken.filter((a) => a.userId === p.id && inPrev(a.createdAt)).length,
+          takenPrev: new Set([...taken.filter((a) => a.userId === p.id && inPrev(a.createdAt)).map((a) => a.jobId), ...allJobs.filter((j) => j.responsibleId === p.id && inPrev(j.takenAt)).map((j) => j.id)]).size,
           items: its.length,
           hours: round2(its.reduce((a, i) => a + i.hours, 0)),
           released: released.filter((a) => a.userId === p.id && inP(a.createdAt)).length,
