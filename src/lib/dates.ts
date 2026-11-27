@@ -74,9 +74,9 @@ const clean = (s: string) => s.replace(".", "");
 /** "Sáb" */
 export const weekdayShort = (d: Date | string) => cap(clean(fWeekday.format(new Date(d))));
 /** "sábado" */
-export const weekdayLong = (d: Date | string) => fWeekdayLong.format(new Date(d));
+export const weekdayLong = (d: Date | string) => fWeekdayLong.format(new Date(d)).toLowerCase();
 /** "noviembre" */
-export const monthLong = (d: Date | string) => fMonthLong.format(new Date(d));
+export const monthLong = (d: Date | string) => fMonthLong.format(new Date(d)).toLowerCase();
 /** "18:00" */
 export const timeLima = (d: Date | string) => fTime.format(new Date(d));
 /** "21 nov" */

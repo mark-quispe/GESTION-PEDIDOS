@@ -273,6 +273,7 @@
 
 /* Barras: escala de la base hacia arriba (sin animar alto). */
 .grow-y {
+  transform-box: fill-box;
   transform-origin: bottom;
   animation: grow-y 520ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 14ms);
