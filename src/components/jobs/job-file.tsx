@@ -24,7 +24,9 @@ import {
   Pencil,
   Phone,
   Presentation,
-  Gauge,
+  ChevronsUp,
+  Diamond,
+  Zap,
   UserMinus,
   UserRound,
   Users,
@@ -77,7 +79,6 @@ import { Textarea } from "@/components/ui/field";
 import { Avatar, TakeButton } from "@/components/jobs/bits";
 import { filterRows } from "@/components/jobs/job-list";
 import { JobsPanel } from "@/components/jobs/jobs-panel";
-import { Prioridad } from "@/components/jobs/jobs-board";
 import { useJobDialogs } from "@/components/jobs/job-dialogs";
 import { ClientSummaryDialog, type SummaryData } from "@/components/jobs/client-summary";
 import { CancelDialog, CorrectionDialog, EditDialog, ReleaseDialog, VoidPaymentDialog } from "@/components/jobs/job-file-dialogs";
@@ -525,6 +526,25 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
   );
 }
 
+/** Casilla grande de prioridad (Mark, 27/11): el color dice qué tan urgente es. */
+function PriorityTile({ u, pct }: { u: JobJSON["urgency"]; pct: number }) {
+  const look = {
+    urgente: { box: "border-danger-line bg-danger/10", tile: "bg-danger/15 text-danger", text: "text-fg", icon: <Zap className="size-6" strokeWidth={1.8} />, label: "Urgente" },
+    alta: { box: "border-warning-line bg-warning/10", tile: "bg-warning/15 text-warning", text: "text-fg", icon: <ChevronsUp className="size-6" strokeWidth={1.8} />, label: "Alta" },
+    normal: { box: "border-border bg-bg/40", tile: "bg-line text-fg-2", text: "text-fg", icon: <Diamond className="size-5" strokeWidth={1.8} />, label: "Normal" },
+  }[u];
+  return (
+    <div className={cn("flex h-full min-h-[120px] items-center gap-4 rounded-xl border px-5 py-4", look.box)}>
+      <span className={cn("grid size-14 shrink-0 place-items-center rounded-xl", look.tile)}>{look.icon}</span>
+      <div className="min-w-0">
+        <p className="text-[14px] text-muted">Prioridad</p>
+        <p className={cn("mt-1 text-[24px] font-semibold tracking-[-0.01em]", look.text)}>{look.label}</p>
+        <p className="mt-1 text-[15px] text-muted">{pct > 0 ? "Recargo +" + pct + "%" : "Sin recargo"}</p>
+      </div>
+    </div>
+  );
+}
+
 /** «por nivel» → «2 niveles», «por elevación» → «2 elevaciones». */
 function unitLabel(unit: string | null | undefined, n: number) {
   const u = (unit ?? "").replace(/^por\s+/, "");
@@ -761,25 +781,21 @@ function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; lat
   const due = (near ? dueLabel(job.dueAt) + " · " + weekdayShort(job.dueAt).toLowerCase() : weekdayShort(job.dueAt)) + " " + dayMonthNum(job.dueAt);
   return (
     <div className="overflow-hidden rounded-xl border bg-surface">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:[&>*:not(:nth-child(3n))]:border-r [&>*]:border-line">
-        <DataCell icon={<CalendarDays strokeWidth={1.6} />} label="Entrega">
-          <span
-            className={cn(
-              "inline-flex rounded-md px-2.5 py-0.5",
-              late ? "border border-danger-line bg-danger-soft text-danger" : today ? "border border-warning-line bg-warning-soft text-warning" : "",
-            )}
-          >
-            {due}
-          </span>
-          {moved && <span className="ml-2 text-xs font-normal text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
-        </DataCell>
-        <DataCell icon={<Gauge strokeWidth={1.6} />} label="Prioridad">
-          <span className="text-[15px]">
-            <Prioridad u={job.urgency} full />
-            {job.urgencyPct > 0 && <span className="ml-2 text-[13px] font-normal text-muted">+{job.urgencyPct} %</span>}
-          </span>
-        </DataCell>
-        <DataCell icon={<UserRound strokeWidth={1.6} />} label="Responsable">
+      {/* Entrega · Responsable / Ciclo · Correcciones a la izquierda; la Prioridad ocupa una casilla grande a la derecha (Mark, 27/11). */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
+          <DataCell icon={<CalendarDays strokeWidth={1.6} />} label="Entrega" className="border-line sm:border-r">
+            <span
+              className={cn(
+                "inline-flex rounded-md px-2.5 py-0.5",
+                late ? "border border-danger-line bg-danger-soft text-danger" : today ? "border border-warning-line bg-warning-soft text-warning" : "",
+              )}
+            >
+              {due}
+            </span>
+            {moved && <span className="ml-2 text-xs font-normal text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
+          </DataCell>
+          <DataCell icon={<UserRound strokeWidth={1.6} />} label="Responsable">
           {job.externo ? (
             <span>
               {job.externo.name} <span className="text-xs font-normal text-faint">· externo</span>
@@ -791,13 +807,18 @@ function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; lat
           ) : (
             <span className="text-warning">Por tomar</span>
           )}
-        </DataCell>
-        <DataCell icon={<Layers strokeWidth={1.6} />} label="Ciclo de la carrera">
-          {job.cycle} {factor && factor !== 1 && <span className="font-mono text-[16px]">× {factor.toFixed(2)}</span>}
-        </DataCell>
-        <DataCell icon={<MessageSquare strokeWidth={1.6} />} label="Correcciones">
-          {job.correctionRounds} de 2
-        </DataCell>
+          </DataCell>
+          <div className="col-span-full mx-5 border-t border-line" />
+          <DataCell icon={<Layers strokeWidth={1.6} />} label="Ciclo de la carrera" className="border-line sm:border-r">
+            {job.cycle} {factor && factor !== 1 && <span className="font-mono text-[16px]">× {factor.toFixed(2)}</span>}
+          </DataCell>
+          <DataCell icon={<MessageSquare strokeWidth={1.6} />} label="Correcciones">
+            {job.correctionRounds} de 2
+          </DataCell>
+        </div>
+        <div className="border-line p-3 lg:border-l">
+          <PriorityTile u={job.urgency} pct={job.urgencyPct} />
+        </div>
       </div>
       <div className="mx-5 border-t border-line" />
       <div className="grid grid-cols-1 sm:grid-cols-3 sm:[&>*:not(:last-child)]:border-r [&>*]:border-line">
