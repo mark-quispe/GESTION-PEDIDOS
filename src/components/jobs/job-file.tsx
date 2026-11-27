@@ -24,6 +24,7 @@ import {
   Pencil,
   Phone,
   Presentation,
+  Gauge,
   UserMinus,
   UserRound,
   Users,
@@ -76,6 +77,7 @@ import { Textarea } from "@/components/ui/field";
 import { Avatar, TakeButton } from "@/components/jobs/bits";
 import { filterRows } from "@/components/jobs/job-list";
 import { JobsPanel } from "@/components/jobs/jobs-panel";
+import { Prioridad } from "@/components/jobs/jobs-board";
 import { useJobDialogs } from "@/components/jobs/job-dialogs";
 import { ClientSummaryDialog, type SummaryData } from "@/components/jobs/client-summary";
 import { CancelDialog, CorrectionDialog, EditDialog, ReleaseDialog, VoidPaymentDialog } from "@/components/jobs/job-file-dialogs";
@@ -759,7 +761,7 @@ function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; lat
   const due = (near ? dueLabel(job.dueAt) + " · " + weekdayShort(job.dueAt).toLowerCase() : weekdayShort(job.dueAt)) + " " + dayMonthNum(job.dueAt);
   return (
     <div className="overflow-hidden rounded-xl border bg-surface">
-      <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 2xl:[&>*:not(:last-child)]:border-r [&>*]:border-line">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:[&>*:not(:nth-child(3n))]:border-r [&>*]:border-line">
         <DataCell icon={<CalendarDays strokeWidth={1.6} />} label="Entrega">
           <span
             className={cn(
@@ -770,6 +772,12 @@ function DataGrid({ job, me, late, closed, factor }: { job: JobJSON; me: Me; lat
             {due}
           </span>
           {moved && <span className="ml-2 text-xs font-normal text-faint">antes <span className="line-through">{dayMonthNum(job.originalDueAt!)}</span></span>}
+        </DataCell>
+        <DataCell icon={<Gauge strokeWidth={1.6} />} label="Prioridad">
+          <span className="text-[15px]">
+            <Prioridad u={job.urgency} full />
+            {job.urgencyPct > 0 && <span className="ml-2 text-[13px] font-normal text-muted">+{job.urgencyPct} %</span>}
+          </span>
         </DataCell>
         <DataCell icon={<UserRound strokeWidth={1.6} />} label="Responsable">
           {job.externo ? (

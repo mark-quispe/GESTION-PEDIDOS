@@ -136,11 +136,11 @@ const PRIO: Record<Urgency, { cls: string; icon: ReactNode }> = {
   normal: { cls: "bg-line text-fg-2 border-transparent", icon: <Diamond className="size-3.5" strokeWidth={2.2} /> },
 };
 
-function Prioridad({ u, className }: { u: Urgency; className?: string }) {
+export function Prioridad({ u, className, full }: { u: Urgency; className?: string; full?: boolean }) {
   return (
-    <span title={URGENCY_LABEL[u]} className={cn("inline-flex h-7 items-center gap-1.5 rounded-full border px-2 text-[13px] font-medium whitespace-nowrap 2xl:px-2.5", PRIO[u].cls, className)}>
+    <span title={URGENCY_LABEL[u]} className={cn("inline-flex h-7 items-center gap-1.5 rounded-full border px-2 text-[13px] font-medium whitespace-nowrap 2xl:px-2.5", full && "px-2.5", PRIO[u].cls, className)}>
       {PRIO[u].icon}
-      <span className="hidden 2xl:inline">{URGENCY_LABEL[u]}</span>
+      <span className={full ? undefined : "hidden 2xl:inline"}>{URGENCY_LABEL[u]}</span>
     </span>
   );
 }
