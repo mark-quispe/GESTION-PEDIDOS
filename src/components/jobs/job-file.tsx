@@ -246,7 +246,7 @@ export function JobFile({
             className="sheet absolute inset-y-0 right-0 flex w-full max-w-[580px] flex-col border-l bg-side pt-5"
             data-state="open"
           >
-            <JobsPanel rows={rows} activeCode={job.code} canTake={me.canTake} meId={me.id} onClose={() => setListOpen(false)} />
+            <JobsPanel rows={rows} activeCode={job.code} canTake={me.canTake} meId={me.id} isAdmin={me.isAdmin} onClose={() => setListOpen(false)} />
           </section>
         </div>
       )}
