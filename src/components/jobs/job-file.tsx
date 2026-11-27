@@ -24,6 +24,7 @@ import {
   Pencil,
   Phone,
   Presentation,
+  UserMinus,
   UserRound,
   Users,
   WalletCards,
@@ -335,6 +336,8 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
   const allDone = job.items.every((i) => i.doneAt);
   const canMark = mine || job.externoId || me.isAdmin;
   const hasRefund = job.payments.some((p) => p.kind === "devolucion" && !p.voidedAt);
+  // El admin puede sacar a quien lo tomó o al externo (pedido de Mark, 27/11).
+  const removable = me.isAdmin && !mine && !unassigned;
 
   const continueJob = () =>
     openNewJob({
@@ -422,6 +425,11 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
             <Undo2 /> Soltar
           </Button>
         )}
+        {removable && (
+          <Button variant="ghost" className="border" onClick={() => setDialog("release")} title="Sacarlo del trabajo: vuelve a Por tomar">
+            <UserMinus /> Sacar a {(job.externo?.name ?? job.responsible?.name ?? "").split(" ")[0]}
+          </Button>
+        )}
         {unassigned && me.canTake ? (
           <TakeButton jobId={job.id} primary />
         ) : (
@@ -447,6 +455,11 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
         {mine && (
           <Button variant="ghost" className="border" onClick={() => setDialog("release")}>
             <Undo2 /> Soltar
+          </Button>
+        )}
+        {removable && (
+          <Button variant="ghost" className="border" onClick={() => setDialog("release")} title="Sacarlo del trabajo: vuelve a Por tomar">
+            <UserMinus /> Sacar a {(job.externo?.name ?? job.responsible?.name ?? "").split(" ")[0]}
           </Button>
         )}
         {unassigned ? (

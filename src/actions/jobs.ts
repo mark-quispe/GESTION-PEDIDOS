@@ -305,6 +305,14 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
     const v = releaseSchema.parse(input);
     const job = await loadJob(v.jobId);
     if (job.responsibleId !== user.id && !user.isAdmin) throw new UserError("Solo quien lo tiene puede soltarlo.");
+    // El admin puede sacar a quien lo tomó o al externo (pedido de Mark, 27/11).
+    const removed = job.responsibleId !== user.id;
+    if (!job.responsibleId && !job.externoId) throw new UserError("Este trabajo no tiene a nadie asignado.");
+    const who = removed
+      ? job.externoId
+        ? (await db.query.externos.findFirst({ where: eq(externos.id, job.externoId) }))?.name ?? "el externo"
+        : (await db.query.users.findFirst({ where: eq(users.id, job.responsibleId!) }))?.name ?? "quien lo tenía"
+      : null;
     const items = await db.select().from(jobItems).where(eq(jobItems.jobId, job.id));
     const pending = items.filter((i) => !i.doneAt);
     const doneItems = items.filter((i) => i.doneAt);
@@ -313,6 +321,7 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
         .update(jobs)
         .set({
           responsibleId: null,
+          externoId: null,
           takenAt: null,
           status: job.status === "en_proceso" ? "confirmado" : job.status,
           statusChangedAt: job.status === "en_proceso" ? new Date() : job.statusChangedAt,
@@ -323,8 +332,9 @@ export async function releaseJob(input: { jobId: string; note?: string }): Promi
         entityId: job.id,
         jobId: job.id,
         action: "soltar",
-        summary:
-          pending.length && doneItems.length
+        summary: removed
+          ? `sacó a ${who} del trabajo${v.note ? ` · «${v.note}»` : ""}`
+          : pending.length && doneItems.length
             ? `soltó el trabajo: hizo ${doneItems.map((i) => i.code).join(", ")}; falta ${pending.map((i) => i.code).join(", ")}`
             : "soltó el trabajo",
         after: { hechos: doneItems.map((i) => i.code), faltan: pending.map((i) => i.code), nota: v.note },

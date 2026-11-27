@@ -72,11 +72,14 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
   const doneItems = job.items.filter((i) => i.doneAt);
   const left = job.items.filter((i) => !i.doneAt);
   const h = (xs: typeof job.items) => round2(xs.reduce((a, i) => a + i.hours, 0));
+  // El admin saca a otra persona (o al externo); quien lo tiene lo suelta.
+  const other = job.responsibleId !== me.id;
+  const name = job.externo?.name ?? job.responsible?.name ?? "";
   const save = () =>
     start(async () => {
       const r = await releaseJob({ jobId: job.id, note: note || undefined });
       if (!r.ok) return void toast.error(r.error);
-      toast.success(left.length ? "Soltado. Lo que falta volvió a Por tomar." : "Soltado.");
+      toast.success(other ? `${name.split(" ")[0]} ya no está en este trabajo. Volvió a Por tomar.` : left.length ? "Soltado. Lo que falta volvió a Por tomar." : "Soltado.");
       onOpenChange(false);
       router.refresh();
     });
@@ -84,16 +87,20 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
     <DialogRoot open={open} onOpenChange={onOpenChange}>
       {open && (
         <DialogContent
-          eyebrow={`${job.code} · soltar`}
-          title={left.length && doneItems.length ? `Soltar con ${left.length} ${left.length === 1 ? "ítem pendiente" : "ítems pendientes"}` : "Soltar el trabajo"}
-          description={`El trabajo vuelve a quedar sin tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que hiciste queda a tu nombre.`}
+          eyebrow={`${job.code} · ${other ? "sacar" : "soltar"}`}
+          title={other ? `Sacar a ${name} del trabajo` : left.length && doneItems.length ? `Soltar con ${left.length} ${left.length === 1 ? "ítem pendiente" : "ítems pendientes"}` : "Soltar el trabajo"}
+          description={
+            other
+              ? `El trabajo vuelve a Por tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que ${name.split(" ")[0]} ya hizo queda a su nombre. Queda en el Historial.`
+              : `El trabajo vuelve a quedar sin tomar${left.length ? ", con lo que falta a la vista" : ""}. Lo que hiciste queda a tu nombre.`
+          }
           footer={
             <>
               <Button size="md" onClick={() => onOpenChange(false)}>
-                Seguir con él
+                {other ? "Volver" : "Seguir con él"}
               </Button>
-              <Button size="md" variant="primary" onClick={save} disabled={pending}>
-                <Undo2 /> Soltar
+              <Button size="md" variant={other ? "danger" : "primary"} onClick={save} disabled={pending}>
+                <Undo2 /> {other ? `Sacar a ${name.split(" ")[0]}` : "Soltar"}
               </Button>
             </>
           }
@@ -103,8 +110,8 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
               <ItemGroup title={`Queda a ${me.name.split(" ")[0] === job.responsible?.name?.split(" ")[0] ? "tu nombre" : "nombre de quien lo hizo"}`} meta={`${h(doneItems)} h · ${doneItems.length} ${doneItems.length === 1 ? "ítem" : "ítems"}`} items={doneItems} done />
             )}
             {left.length > 0 && <ItemGroup title="Falta · vuelve a Por tomar" tone="warning" meta={`${h(left)} h · ${left.length} ${left.length === 1 ? "ítem" : "ítems"}`} items={left} />}
-            <Field label="Nota para quien lo tome" optional>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Dónde dejaste los archivos, qué falta revisar…" />
+            <Field label={other ? "Motivo y nota para quien lo tome" : "Nota para quien lo tome"} optional>
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={other ? "Por qué lo sacas, dónde están los archivos, qué falta…" : "Dónde dejaste los archivos, qué falta revisar…"} />
             </Field>
           </div>
         </DialogContent>
