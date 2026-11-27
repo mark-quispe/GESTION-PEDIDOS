@@ -12,7 +12,7 @@ export default async function HomePage() {
   const d = await getDashboard(admin);
   return (
     <PageBody className="xl:h-dvh xl:max-h-dvh xl:min-h-[900px] xl:overflow-hidden [&_*]:leading-[normal]">
-      <HomeBoard d={d} canTake={user.canTake} />
+      <HomeBoard d={d} canTake={user.canTake} admin={admin} />
     </PageBody>
   );
 }
