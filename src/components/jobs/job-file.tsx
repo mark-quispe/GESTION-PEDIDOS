@@ -339,6 +339,8 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
   const allDone = job.items.every((i) => i.doneAt);
   const canMark = mine || job.externoId || me.isAdmin;
   const hasRefund = job.payments.some((p) => p.kind === "devolucion" && !p.voidedAt);
+  // No se confirma sin el 50 % pagado (pedido de Mark, 27/11).
+  const halfMissing = round2(money.total / 2 - money.paid);
   // El admin puede sacar a quien lo tomó o al externo (pedido de Mark, 27/11).
   const removable = me.isAdmin && !mine && !unassigned;
 
@@ -387,7 +389,12 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
       <>
         {trash}
         {edit}
-        <Button variant="primary" onClick={() => run(() => confirmQuote(job.id), "Confirmado: ya está en Trabajos por tomar.")} disabled={pending}>
+        <Button
+          variant="primary"
+          onClick={() => run(() => confirmQuote(job.id), "Confirmado: ya está en Trabajos por tomar.")}
+          disabled={pending || halfMissing > 0.004}
+          title={halfMissing > 0.004 ? `Falta pagar ${formatMoney(halfMissing)} del 50 % para confirmar` : undefined}
+        >
           <Check /> Confirmar
         </Button>
       </>
@@ -619,6 +626,30 @@ function StateBanner({ job, money, me }: { job: JobJSON; money: Money; me: Me })
         </p>
       </div>
     );
+  if (s === "cotizacion") {
+    const half = round2(money.total / 2);
+    const missing = round2(half - money.paid);
+    return (
+      <div className="enter flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
+        <span>
+          Cotización.{" "}
+          {missing > 0.004 ? (
+            <>
+              Para <b className="font-medium">Confirmar</b> el cliente tiene que pagar al menos el 50 % ({formatMoney(half)}).{" "}
+              <span className="text-warning">Falta {formatMoney(missing)}.</span>
+            </>
+          ) : (
+            <span className="text-success">Ya pagó el 50 %: se puede confirmar.</span>
+          )}
+        </span>
+        {missing > 0.004 && (
+          <Button size="sm" onClick={() => openPayment(job.id)}>
+            Registrar adelanto
+          </Button>
+        )}
+      </div>
+    );
+  }
   if (s === "terminado")
     return (
       <p className="enter rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
@@ -999,7 +1030,7 @@ function PaymentsSection({ job, me, money }: { job: JobJSON; me: Me; money: Mone
         </span>
       </div>
       <div className="px-5">
-        {job.payments.length === 0 && <p className="py-5 text-center text-[14px] text-faint">{job.status === "cotizacion" ? "Sin pagos: es una cotización." : "Aún no hay pagos."}</p>}
+        {job.payments.length === 0 && <p className="py-5 text-center text-[14px] text-faint">{job.status === "cotizacion" ? "Sin pagos todavía: para confirmar debe pagar el 50 %." : "Aún no hay pagos."}</p>}
         {job.payments.map((p) => (
           <PaymentRow
             key={p.id}

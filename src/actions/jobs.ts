@@ -153,6 +153,8 @@ export async function createJob(input: CreateJobInput): Promise<ActionResult<{ c
     const confirmed = v.initialStatus === "confirmado";
     const status: JobStatus = !confirmed ? "cotizacion" : v.who === "pozo" ? "confirmado" : "en_proceso";
     if (v.advance && v.advance.amount > total + 0.004) throw new UserError("El adelanto es mayor que el total.");
+    // Regla pedida por Mark (27/11): no se confirma sin el 50 % pagado.
+    if (confirmed && (v.advance?.amount ?? 0) + 0.004 < round2(total / 2)) throw new UserError(`Para confirmar, el adelanto debe ser al menos el 50 %: ${formatMoney(round2(total / 2))}.`);
 
     const queries = [];
     if (!clientId && v.newClient) {
@@ -801,6 +803,15 @@ export async function reopenJob(jobId: string): Promise<ActionResult> {
 export async function confirmQuote(jobId: string): Promise<ActionResult> {
   try {
     const user = await assertRole();
+    // Regla pedida por Mark (27/11): no se confirma sin el 50 % pagado.
+    const job = await loadJob(jobId);
+    const [pays, extras] = await Promise.all([
+      db.select().from(payments).where(and(eq(payments.jobId, jobId), isNull(payments.deletedAt))),
+      db.select().from(jobExtras).where(and(eq(jobExtras.jobId, jobId), isNull(jobExtras.deletedAt))),
+    ]);
+    const half = round2((job.price + extras.reduce((a, e) => a + e.amount, 0)) / 2);
+    const missing = round2(half - paidNet(pays));
+    if (missing > 0.004) throw new UserError(`Para confirmar falta pagar ${formatMoney(missing)} (el 50 % es ${formatMoney(half)}). Registra el adelanto primero.`);
     await moveStatus(user, jobId, ["cotizacion"], "confirmado", "confirmó la cotización");
     done();
     return { ok: true };
