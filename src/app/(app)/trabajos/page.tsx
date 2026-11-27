@@ -44,6 +44,7 @@ export default async function TrabajosPage({ searchParams }: PageProps<"/trabajo
       <JobTable
         actions={<JobActionButtons />}
         rows={visible}
+        initialQ={typeof sp.q === "string" ? sp.q.slice(0, 80) : ""}
         canTake={user.canTake}
         footer={<p className="hidden text-center text-xs text-faint md:block">Al elegir un trabajo se abre su ficha a todo el ancho y esta lista se esconde a la derecha (botón Trabajos).</p>}
       />

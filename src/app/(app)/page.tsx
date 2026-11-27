@@ -1,54 +1,18 @@
 import { requireUser } from "@/lib/auth-guard";
 import { getDashboard } from "@/lib/queries/dashboard";
-import { isoWeek, monthLong, todayLima, weekdayLong } from "@/lib/dates";
-import { PageBody, PageHeader } from "@/components/layout/page-header";
-import { JobActionButtons } from "@/components/jobs/job-buttons";
-import {
-  FinishedWeekCard,
-  LateCard,
-  LoadQuotesCard,
-  MoneyCard,
-  PendingCard,
-  PoolCard,
-  PriorityLegend,
-  QuotesCard,
-  WeekStrip,
-} from "@/components/home/cards";
+import { PageBody } from "@/components/layout/page-header";
+import { HomeBoard } from "@/components/home/home-board";
 
 export const metadata = { title: "Inicio" };
 
-/** RF-19, RF-20, RF-49, RF-50: lo que hay que entregar, cobrar y responder. */
+/** RF-19, RF-49, RF-50: lo que hay que entregar, cobrar y responder. Misma distribución para admin y empleado (pedido de Mark, 27/11). */
 export default async function HomePage() {
   const user = await requireUser();
   const admin = user.isAdmin && !user.viewAsEmployee;
   const d = await getDashboard(admin);
-  const today = todayLima();
-  const noon = new Date(`${today}T12:00:00-05:00`);
-  const eyebrow = `${weekdayLong(noon)}, ${Number(today.slice(8))} de ${monthLong(noon)} · semana ${isoWeek(today)}`;
-
   return (
-    <PageBody className="xl:h-dvh xl:max-h-dvh xl:min-h-[860px] xl:overflow-hidden">
-      <PageHeader n="01" eyebrow={eyebrow} title="Inicio" description="Lo que hay que entregar, cobrar y responder." actions={<JobActionButtons size="lg" long />} />
-      <PriorityLegend />
-      <WeekStrip week={d.week} />
-      {/* Design final: 3 columnas y 2 filas que llenan la pantalla; la tercera columna ocupa las dos filas. */}
-      {admin ? (
-        <div className="grid min-h-0 flex-1 gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <LateCard rows={d.late} className="max-h-[360px] xl:max-h-none" />
-          <LoadQuotesCard load={d.load} quotes={d.quotes} badge={d.alerts.quotes} className="max-h-[360px] xl:max-h-none" />
-          <MoneyCard money={d.money!} className="min-h-0 md:col-span-2 xl:col-span-1 xl:row-span-2" />
-          <PendingCard data={d.pending} badge={d.alerts.pending} className="max-h-[360px] xl:max-h-none" />
-          <PoolCard pool={d.pool} hot={d.hot} canTake={user.canTake} className="max-h-[420px] xl:max-h-none" />
-        </div>
-      ) : (
-        <div className="grid min-h-0 flex-1 gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <LateCard rows={d.late} className="max-h-[360px] xl:max-h-none" />
-          <QuotesCard rows={d.quotes} badge={d.alerts.quotes} className="max-h-[360px] xl:max-h-none" />
-          <PoolCard pool={d.pool} hot={d.hot} canTake={user.canTake} className="max-h-[420px] md:col-span-2 xl:col-span-1 xl:row-span-2 xl:max-h-none" />
-          <PendingCard data={d.pending} badge={d.alerts.pending} className="max-h-[360px] xl:max-h-none" />
-          <FinishedWeekCard rows={d.finishedWeek} className="max-h-[360px] xl:max-h-none" />
-        </div>
-      )}
+    <PageBody className="xl:h-dvh xl:max-h-dvh xl:min-h-[900px] xl:overflow-hidden [&_*]:leading-[normal]">
+      <HomeBoard d={d} canTake={user.canTake} />
     </PageBody>
   );
 }

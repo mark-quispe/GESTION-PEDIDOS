@@ -11,6 +11,8 @@ export type DayCol = { day: string; jobs: { code: string; client: string; time: 
 
 export type Dashboard = {
   week: DayCol[];
+  /** Trabajos abiertos que no son cotización. */
+  active: number;
   late: JobRow[];
   quotes: (JobRow & { ageDays: number })[];
   pool: JobRow[];
@@ -19,7 +21,7 @@ export type Dashboard = {
   pending: { rows: (JobRow & { finishedAgo: number | null })[]; total: number };
   finishedWeek: JobRow[];
   load: { id: string; name: string; open: number; next: string | null; ext: boolean }[];
-  alerts: { quotes: number; pending: number };
+  alerts: { quotes: number; pending: number; pendingDays: number };
   money?: {
     today: number;
     todayCount: number;
@@ -85,10 +87,12 @@ export async function getDashboard(withMoney: boolean): Promise<Dashboard> {
   const alerts = {
     quotes: s.alerts.quoteOn === false ? 0 : quotes.filter((q) => q.ageDays >= s.alerts.quoteDays).length,
     pending: s.alerts.pendingOn === false ? 0 : pendingRows.filter((p) => p.finishedAgo !== null && p.finishedAgo >= s.alerts.pendingDays).length,
+    pendingDays: s.alerts.pendingDays,
   };
 
   const result: Dashboard = {
     week,
+    active: open.filter((r) => r.status !== "cotizacion").length,
     late,
     quotes,
     pool,

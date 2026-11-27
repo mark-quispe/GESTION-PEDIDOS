@@ -582,3 +582,15 @@
     pointer-events: auto;
   }
 }
+
+/* Inicio: la manito saluda una vez al entrar. */
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(14deg); }
+  40% { transform: rotate(-8deg); }
+  60% { transform: rotate(10deg); }
+  80% { transform: rotate(-4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[wave_1\.6s_ease-in-out_1\] { animation: none; }
+}
