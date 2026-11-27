@@ -117,7 +117,7 @@ const JOBS: JobSpec[] = [
   { client: "Diego Ramos", title: "Panel A1 centro cultural", items: [["PA-01", 1]], dueInDays: 0, dueTime: "20:00", urgency: "alta", status: "confirmado", who: null, paid: "all", createdDaysAgo: 3 },
   { client: "Valeria Ccori", title: "Elevaciones de mercado", items: [["PL-07", 2]], dueInDays: 0, dueTime: "23:59", status: "en_proceso", who: "luis", paid: 40, createdDaysAgo: 5 },
   { client: "Tomás Rivas", title: "Plano de remodelación", items: [["PL-02", 1], ["PL-04", 1]], dueInDays: 0, dueTime: "21:00", urgency: "urgente", status: "confirmado", who: null, paid: "half", createdDaysAgo: 1 },
-  { client: "Jorge Mamani", title: "Cortes y elevaciones biblioteca", items: [["PL-06", 2, true], ["PL-07", 2, true], ["MD-03", 1]], dueInDays: 1, dueTime: "12:00", urgency: "alta", status: "en_proceso", who: null, paid: "half", createdDaysAgo: 4 },
+  { client: "Jorge Mamani", title: "Cortes y elevaciones biblioteca", items: [["PL-06", 2, true], ["PL-07", 2, true], ["MD-03", 1]], dueInDays: 1, dueTime: "12:00", urgency: "alta", status: "confirmado", who: null, paid: "half", createdDaysAgo: 4 },
   { client: "Lucía Huamán", title: "Lámina de zonificación", items: [["LG-06", 2]], dueInDays: 1, dueTime: "18:00", urgency: "alta", status: "terminado", who: "ana", paid: "all", createdDaysAgo: 3 },
   { client: "Sofía Paredes", title: "Panel volumétrico", items: [["PA-03", 1], ["LG-02", 1]], dueInDays: 2, dueTime: "09:00", status: "confirmado", who: null, paid: "half", createdDaysAgo: 2 },
   { client: "Bruno Salazar", title: "Modelado 3D de vivienda", items: [["MD-01", 1], ["MD-03", 2]], dueInDays: 2, dueTime: "17:00", status: "en_proceso", who: "ana", paid: "half", createdDaysAgo: 3 },

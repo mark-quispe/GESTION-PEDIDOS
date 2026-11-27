@@ -80,7 +80,7 @@ export const monthLong = (d: Date | string) => fMonthLong.format(new Date(d));
 /** "18:00" */
 export const timeLima = (d: Date | string) => fTime.format(new Date(d));
 /** "21 nov" */
-export const dayMonth = (d: Date | string) => `${Number(dayKey(d).slice(8))} ${clean(fMonthShort.format(new Date(d)))}`;
+export const dayMonth = (d: Date | string) => `${Number(dayKey(d).slice(8))} ${clean(fMonthShort.format(new Date(d))).toLowerCase()}`;
 /** "21/11" */
 export const dayMonthNum = (d: Date | string) => `${dayKey(d).slice(8)}/${dayKey(d).slice(5, 7)}`;
 

@@ -25,6 +25,7 @@ export function DialogContent({
   eyebrow,
   hideClose,
 }: {
+  /** Escape no cierra la ventana si viene de algo que lo usa (un buscador abierto). */
   title: ReactNode;
   description?: ReactNode;
   children: ReactNode;
@@ -38,6 +39,9 @@ export function DialogContent({
     <D.Portal>
       <D.Overlay className="overlay fixed inset-0 z-50 bg-scrim backdrop-blur-[2px]" />
       <D.Content
+        onEscapeKeyDown={(e) => {
+          if ((e.target as HTMLElement | null)?.closest?.("[data-esc-local]")) e.preventDefault();
+        }}
         className={cn(
           "modal fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-32px)] w-[calc(100vw-24px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.45)] focus:outline-none",
           wide === "xl" ? "max-w-[1080px]" : wide ? "max-w-[760px]" : "max-w-[480px]",
