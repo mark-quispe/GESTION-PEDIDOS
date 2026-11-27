@@ -12,7 +12,6 @@ import {
   PoolCard,
   PriorityLegend,
   QuotesCard,
-  ToSendCard,
   WeekStrip,
 } from "@/components/home/cards";
 
@@ -28,28 +27,25 @@ export default async function HomePage() {
   const eyebrow = `${weekdayLong(noon)}, ${Number(today.slice(8))} de ${monthLong(noon)} · semana ${isoWeek(today)}`;
 
   return (
-    <PageBody>
+    <PageBody className="xl:h-dvh xl:max-h-dvh xl:min-h-[860px] xl:overflow-hidden">
       <PageHeader n="01" eyebrow={eyebrow} title="Inicio" description="Lo que hay que entregar, cobrar y responder." actions={<JobActionButtons size="lg" long />} />
       <PriorityLegend />
       <WeekStrip week={d.week} />
+      {/* Design final: 3 columnas y 2 filas que llenan la pantalla; la tercera columna ocupa las dos filas. */}
       {admin ? (
-        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-rows-[268px_268px]">
-          <div className="flex min-h-0 flex-col gap-3.5" style={{ "--i": 1 } as React.CSSProperties}>
-            <LateCard rows={d.late} className="max-h-[360px] min-h-[150px] flex-1 xl:max-h-none" />
-            {d.toSend.length > 0 && <ToSendCard rows={d.toSend} className="max-h-[220px] shrink-0" />}
-          </div>
+        <div className="grid min-h-0 flex-1 gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+          <LateCard rows={d.late} className="max-h-[360px] xl:max-h-none" />
           <LoadQuotesCard load={d.load} quotes={d.quotes} badge={d.alerts.quotes} className="max-h-[360px] xl:max-h-none" />
           <MoneyCard money={d.money!} className="min-h-0 md:col-span-2 xl:col-span-1 xl:row-span-2" />
           <PendingCard data={d.pending} badge={d.alerts.pending} className="max-h-[360px] xl:max-h-none" />
           <PoolCard pool={d.pool} hot={d.hot} canTake={user.canTake} className="max-h-[420px] xl:max-h-none" />
         </div>
       ) : (
-        <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-[268px_268px]">
+        <div className="grid min-h-0 flex-1 gap-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <LateCard rows={d.late} className="max-h-[360px] xl:max-h-none" />
           <QuotesCard rows={d.quotes} badge={d.alerts.quotes} className="max-h-[360px] xl:max-h-none" />
-          <ToSendCard rows={d.toSend} className="max-h-[360px] xl:max-h-none" />
+          <PoolCard pool={d.pool} hot={d.hot} canTake={user.canTake} className="max-h-[420px] md:col-span-2 xl:col-span-1 xl:row-span-2 xl:max-h-none" />
           <PendingCard data={d.pending} badge={d.alerts.pending} className="max-h-[360px] xl:max-h-none" />
-          <PoolCard pool={d.pool} hot={d.hot} canTake={user.canTake} className="max-h-[420px] xl:max-h-none" />
           <FinishedWeekCard rows={d.finishedWeek} className="max-h-[360px] xl:max-h-none" />
         </div>
       )}

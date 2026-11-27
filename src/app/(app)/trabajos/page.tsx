@@ -36,17 +36,15 @@ export default async function TrabajosPage({ searchParams }: PageProps<"/trabajo
           </Link>
         )}
       </header>
-      <div className="flex flex-wrap items-center gap-2.5">
-        <JobActionButtons />
-        {respName && (
-          <Link href="/trabajos" className="inline-flex h-[34px] items-center gap-2 rounded-md border bg-surface px-3 text-[13px]">
-            Solo de {respName} <span className="text-faint">· ver todos</span>
-          </Link>
-        )}
-      </div>
+      {respName && (
+        <Link href="/trabajos" className="inline-flex h-[34px] items-center gap-2 self-start rounded-md border bg-surface px-3 text-[13px]">
+          Solo de {respName} <span className="text-faint">· ver todos</span>
+        </Link>
+      )}
       <JobTable
+        actions={<JobActionButtons />}
         rows={visible}
-        canTake={user.canTake && !user.viewAsEmployee ? true : user.canTake}
+        canTake={user.canTake}
         footer={<p className="hidden text-center text-xs text-faint md:block">Al elegir un trabajo se abre su ficha a todo el ancho y esta lista se esconde a la derecha (botón Trabajos).</p>}
       />
     </PageBody>

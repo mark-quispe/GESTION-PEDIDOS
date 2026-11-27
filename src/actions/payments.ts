@@ -209,3 +209,40 @@ export async function getJobMoney(jobId: string): Promise<JobMoney | null> {
     itemsDone: job.items.filter((i) => i.doneAt).length,
   };
 }
+
+/** RF-15 y RF-21: el admin corrige un pago; el valor anterior queda en el historial. */
+export async function correctPayment(input: { paymentId: string; amount: number; method: "yape" | "plin" | "transferencia" | "efectivo"; paidDate: string; operationNumber?: string; reason: string }): Promise<ActionResult> {
+  try {
+    const user = await assertRole("admin");
+    const why = input.reason?.trim() ?? "";
+    if (why.length < 3) throw new UserError("Escribe el motivo de la corrección.");
+    if (!(input.amount > 0)) throw new UserError("El monto debe ser mayor que 0.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.paidDate)) throw new UserError("Elige la fecha.");
+    const p = await db.query.payments.findFirst({ where: eq(payments.id, input.paymentId) });
+    if (!p || p.voidedAt || p.deletedAt) throw new UserError("Ese pago ya no está vigente.");
+    const sameDay = p.paidAt.toISOString().slice(0, 10) === limaInstant(input.paidDate, "12:00").toISOString().slice(0, 10);
+    const after = {
+      amount: round2(input.amount),
+      method: input.method,
+      operationNumber: input.operationNumber?.trim() || null,
+      paidAt: sameDay ? p.paidAt : limaInstant(input.paidDate, "12:00"),
+    };
+    await batch([
+      db.update(payments).set(after).where(eq(payments.id, p.id)),
+      audit({
+        entity: "pago",
+        entityId: p.id,
+        jobId: p.jobId,
+        action: "corregir",
+        summary: `corrigió ${p.kind === "devolucion" ? "la devolución" : "el pago"}: ${formatMoney(p.amount)} → ${formatMoney(after.amount)} · «${why}»`,
+        before: { amount: p.amount, method: p.method, operationNumber: p.operationNumber, paidAt: p.paidAt },
+        after: { ...after, reason: why },
+        userId: user.id,
+      }),
+    ]);
+    done();
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
