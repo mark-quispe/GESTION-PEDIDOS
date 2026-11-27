@@ -581,13 +581,13 @@ function StateBanner({ job, money, me }: { job: JobJSON; money: Money; me: Me })
     );
   if (s === "terminado")
     return (
-      <p className="enter rounded-lg border border-info-line bg-info-soft px-4 py-2.5 text-[13px]">
+      <p className="enter rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
         Listo para enviar. Mándale el avance o la versión final por WhatsApp y marca <b className="font-medium">Enviado al cliente</b>.
       </p>
     );
   if (s === "en_revision")
     return (
-      <p className="enter flex flex-wrap items-center justify-between gap-2 rounded-lg border border-info-line bg-info-soft px-4 py-2.5 text-[13px]">
+      <p className="enter flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-surface px-4 py-2.5 text-[13px]">
         <span>
           Esperando al cliente. Si pide cambios, <b className="font-medium">Pidió correcciones</b> lo devuelve a Correcciones. Si lo aprueba, <b className="font-medium">Finalizar</b>.
         </span>
