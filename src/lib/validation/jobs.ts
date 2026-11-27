@@ -123,6 +123,8 @@ export const paymentSchema = z.object({
   method: methodSchema,
   paidDate: daySchema,
   operationNumber: optText(40),
+  /** Observaciones (rediseño 27/11). */
+  note: optText(300),
 });
 export type PaymentInput = z.input<typeof paymentSchema>;
 
