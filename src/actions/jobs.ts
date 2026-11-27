@@ -425,6 +425,14 @@ export async function markSent(jobId: string): Promise<ActionResult> {
 export async function finalizeJob(jobId: string): Promise<ActionResult> {
   try {
     const user = await assertRole();
+    // Regla pedida por Mark (27/11): no se finaliza con pagos pendientes.
+    const job = await loadJob(jobId);
+    const [pays, extras] = await Promise.all([
+      db.select().from(payments).where(and(eq(payments.jobId, jobId), isNull(payments.deletedAt))),
+      db.select().from(jobExtras).where(and(eq(jobExtras.jobId, jobId), isNull(jobExtras.deletedAt))),
+    ]);
+    const pending = round2(job.price + extras.reduce((a, e) => a + e.amount, 0) - paidNet(pays));
+    if (pending > 0.004) throw new UserError(`No se puede finalizar: falta cobrar ${formatMoney(pending)}. Registra el pago primero.`);
     await moveStatus(user, jobId, ["en_revision", "terminado"], "finalizado", "lo finalizó: el cliente quedó conforme", { finishedAt: new Date(), finishedById: user.id });
     done();
     return { ok: true };

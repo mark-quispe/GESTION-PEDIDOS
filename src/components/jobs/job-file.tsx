@@ -402,7 +402,12 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
         {trash}
         {edit}
         <Button onClick={() => setDialog("correction")}>Pidió correcciones</Button>
-        <Button variant="primary" onClick={() => run(() => finalizeJob(job.id), "Finalizado.")} disabled={pending}>
+        <Button
+          variant="primary"
+          onClick={() => run(() => finalizeJob(job.id), "Finalizado.")}
+          disabled={pending || money.pending > 0.004}
+          title={money.pending > 0.004 ? `Falta cobrar ${formatMoney(money.pending)}: registra el pago para poder finalizar` : undefined}
+        >
           <CircleCheck /> Finalizar
         </Button>
       </>
@@ -591,7 +596,16 @@ function StateBanner({ job, money, me }: { job: JobJSON; money: Money; me: Me })
         <span>
           Esperando al cliente. Si pide cambios, <b className="font-medium">Pidió correcciones</b> lo devuelve a Correcciones. Si lo aprueba, <b className="font-medium">Finalizar</b>.
         </span>
-        {job.sentAt && <span className="font-mono text-[11px] text-muted">enviado {timeAgo(job.sentAt)}</span>}
+        {money.pending > 0.004 ? (
+          <span className="flex items-center gap-2 text-warning">
+            Para finalizar falta cobrar {formatMoney(money.pending)}
+            <Button size="sm" onClick={() => openPayment(job.id)}>
+              Registrar pago
+            </Button>
+          </span>
+        ) : (
+          job.sentAt && <span className="font-mono text-[11px] text-muted">enviado {timeAgo(job.sentAt)}</span>
+        )}
       </p>
     );
   if (money.state === "de_mas") {

@@ -91,6 +91,7 @@ El login solo pide nombre y correo. El permiso de Drive es aparte: lo da el admi
 - **Servicios:** las casillas con flechas se guardan solas al dejar de moverlas (0,7 s) y cada cambio queda en el Historial. Cambiar el tarifario no toca los trabajos ya registrados.
 - **Importar (RF-28):** la columna «Ítems» acepta códigos del tarifario («PL-02 x2, PL-06»). Sin ítems, la fila entra como Personalizado con su descripción y precio.
 - **Respaldo:** la hora (03:00) la fija el cron de Vercel; en Configuración se puede pausar, no cambiar la hora. El aviso de Drive lleno se mide en GB.
+- **Finalizar (pedido de Mark, 27/11):** un trabajo no pasa a Finalizado si le falta cobrar algo. El botón queda desactivado y el servidor lo rechaza. El documento de requerimientos (sección «sin reglas en la v1») debe actualizarse con esta regla.
 - **Logo del estudio:** se guarda como imagen pequeña (máx. 150 KB) en la base, sin depender de Drive.
 
 ## Pendientes con el dueño (sección 9 del documento)
