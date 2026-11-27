@@ -73,9 +73,7 @@ export function HomeBoard({ d, canTake, admin }: { d: Dashboard; canTake: boolea
           <p className="text-sm text-muted">
             {dateLine.charAt(0).toUpperCase() + dateLine.slice(1).replace(".", ",")} <span className="mx-1.5">·</span> Semana {weekNumber(today)}
           </p>
-          <h1 className="mt-1.5 text-[32px] font-semibold tracking-[-0.025em]">
-            Inicio <span className="inline-block origin-[70%_70%] animate-[wave_1.6s_ease-in-out_1]">👋</span>
-          </h1>
+          <h1 className="mt-1.5 text-[32px] font-semibold tracking-[-0.025em]">INICIO</h1>
           <p className="mt-1 text-[15px] text-muted">Aquí un resumen de tu estudio.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
