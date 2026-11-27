@@ -25,7 +25,7 @@ const PERIODS: { value: ProdPeriod; label: string }[] = [
 const SHADES = ["var(--fg)", "var(--muted)", "var(--bar)", "var(--border-strong)", "var(--border)"];
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-const fmtH = (h: number) => `${new Intl.NumberFormat("es-PE", { maximumFractionDigits: 1 }).format(h)} h`;
+const fmtH = (h: number) => `${new Intl.NumberFormat("es-PE", { maximumFractionDigits: 1 }).format(h)} h aprox.`;
 /** «Plano cero y valorización» → «Plano cero». */
 const shortCat = (c: string) => c.split(/ y | \(/)[0];
 const shortSkill = (n: string) => n.split(" ")[0];

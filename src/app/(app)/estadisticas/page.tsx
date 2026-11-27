@@ -183,7 +183,7 @@ export default async function StatsPage({ searchParams }: PageProps<"/estadistic
                   <Spark values={p.series} width={64} height={28} />
                 </div>
                 <p className="text-xs text-muted">
-                  {p.items} ítems · {p.hours} h · soltó {p.released}
+                  {p.items} ítems · {p.hours} h aprox. · soltó {p.released}
                 </p>
                 <p className="font-mono text-[10.5px] text-faint">{p.role}</p>
               </div>

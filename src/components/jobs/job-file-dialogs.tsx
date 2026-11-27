@@ -107,9 +107,9 @@ export function ReleaseDialog({ job, open, onOpenChange, me }: { job: JobJSON; o
         >
           <div className="flex flex-col gap-3">
             {doneItems.length > 0 && (
-              <ItemGroup title={`Queda a ${me.name.split(" ")[0] === job.responsible?.name?.split(" ")[0] ? "tu nombre" : "nombre de quien lo hizo"}`} meta={`${h(doneItems)} h · ${doneItems.length} ${doneItems.length === 1 ? "ítem" : "ítems"}`} items={doneItems} done />
+              <ItemGroup title={`Queda a ${me.name.split(" ")[0] === job.responsible?.name?.split(" ")[0] ? "tu nombre" : "nombre de quien lo hizo"}`} meta={`${h(doneItems)} h aprox. · ${doneItems.length} ${doneItems.length === 1 ? "ítem" : "ítems"}`} items={doneItems} done />
             )}
-            {left.length > 0 && <ItemGroup title="Falta · vuelve a Por tomar" tone="warning" meta={`${h(left)} h · ${left.length} ${left.length === 1 ? "ítem" : "ítems"}`} items={left} />}
+            {left.length > 0 && <ItemGroup title="Falta · vuelve a Por tomar" tone="warning" meta={`${h(left)} h aprox. · ${left.length} ${left.length === 1 ? "ítem" : "ítems"}`} items={left} />}
             <Field label={other ? "Motivo y nota para quien lo tome" : "Nota para quien lo tome"} optional>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={other ? "Por qué lo sacas, dónde están los archivos, qué falta…" : "Dónde dejaste los archivos, qué falta revisar…"} />
             </Field>
@@ -131,7 +131,7 @@ function ItemGroup({ title, meta, items, done, tone }: { title: string; meta: st
         <p key={i.id} className="flex items-center gap-3 border-t border-line px-3 py-2 text-[13px] first-of-type:border-t-0">
           <span className="w-12 font-mono text-[11px] text-muted">{i.code}</span>
           <span className={cn("min-w-0 flex-1 truncate", done && "text-muted line-through")}>{i.name}</span>
-          <span className="font-mono text-[11px] text-faint">{i.hours} h</span>
+          <span className="font-mono text-[11px] text-faint">{i.hours} h aprox.</span>
         </p>
       ))}
     </div>

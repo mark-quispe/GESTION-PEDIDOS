@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { FixedBox, StepBox } from "@/components/ui/step-box";
 import { DialogRoot, SheetContent } from "@/components/ui/dialog";
 
-const COLS = "grid-cols-[64px_minmax(0,1fr)_92px_60px_64px_118px]";
+const COLS = "grid-cols-[64px_minmax(0,1fr)_92px_92px_64px_118px]";
 const CYCLES: { label: string; key: number }[] = [3, 4, 5, 6, 7, 8].map((c) => ({ label: `ciclo ${c}`, key: c })).concat([{ label: "ciclo 9–10", key: 9 }]);
 const money = (n: number) => new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 }).format(n);
 const money2 = (n: number) => new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -253,7 +253,7 @@ function ItemRow({ item, admin, save }: { item: ServiceRow & { cat: ServiceCateg
         {item.includes && <span className="text-[12.5px] text-faint"> · {item.includes}</span>}
       </span>
       <span className="truncate text-[12.5px] text-muted">{item.unit}</span>
-      <span className="font-mono text-xs text-muted">{item.hours == null ? "—" : `${hrs(item.hours)} h`}</span>
+      <span className="font-mono text-xs text-muted">{item.hours == null ? "—" : `${hrs(item.hours)} h aprox.`}</span>
       <span>
         <CycleChip mode={item.pricingMode} />
       </span>

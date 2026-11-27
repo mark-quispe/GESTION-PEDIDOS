@@ -355,7 +355,7 @@ function NewJobForm({ data, prefill, close }: { data: NewJobData; prefill: NewJo
               <div className="flex items-end justify-between gap-4 rounded-lg border bg-bg px-4 py-3">
                 <span>
                   <span className="block text-[13px] text-fg-2">Total a cobrar</span>
-                  <span className="block font-mono text-[11.5px] text-faint">≈ {totals.hours} h · 2 correcciones incluidas</span>
+                  <span className="block font-mono text-[11.5px] text-faint">{totals.hours} h aprox. · 2 correcciones incluidas</span>
                 </span>
                 <span key={total} className="number-pop font-mono text-[28px] font-medium tracking-tight">
                   {formatMoney(total)}

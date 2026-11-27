@@ -893,7 +893,7 @@ function ItemsSection({ job, me, closed, onSummary, onEdit }: { job: JobJSON; me
           const done = optimistic.find((o) => o.id === it.id)?.done ?? false;
           const who = it.doneByExterno?.name ?? it.doneBy?.name;
           return (
-            <div key={it.id} className={cn("grid min-h-16 grid-cols-[22px_auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2.5 md:grid-cols-[22px_64px_minmax(0,1fr)_110px_48px_96px] md:gap-x-4 md:px-5 2xl:grid-cols-[22px_64px_minmax(0,1fr)_110px_110px_48px_96px]", idx > 0 && "border-t border-line")}>
+            <div key={it.id} className={cn("grid min-h-16 grid-cols-[22px_auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-2.5 md:grid-cols-[22px_64px_minmax(0,1fr)_110px_92px_96px] md:gap-x-4 md:px-5 2xl:grid-cols-[22px_64px_minmax(0,1fr)_110px_110px_92px_96px]", idx > 0 && "border-t border-line")}>
               <button
                 type="button"
                 role="checkbox"
@@ -926,14 +926,14 @@ function ItemsSection({ job, me, closed, onSummary, onEdit }: { job: JobJSON; me
                   <span className="inline-flex h-7 items-center rounded-md bg-warning-soft px-2.5 text-[14px] font-medium text-warning">falta</span>
                 ) : null}
               </span>
-              <span className="hidden text-[15px] text-muted md:block">{it.hours} h</span>
+              <span className="hidden text-[15px] text-muted md:block">{it.hours} h aprox.</span>
               <span className={cn("hidden text-right text-[17px] font-semibold tabular-nums md:block", done && "text-faint")}>{formatMoney(it.amount)}</span>
             </div>
           );
         })}
         <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-1 border-t border-line px-5 py-3 text-[14px] text-muted">
           <span>
-            ≈ <span className="font-mono text-fg">{hours} h</span> de trabajo
+            <span className="font-mono text-fg">{hours} h</span> de trabajo aprox.
           </span>
           <span>
             {job.urgency === "normal" ? "Normal" : job.urgency === "alta" ? "Alta" : "Urgente"} <span className={cn("font-mono", job.urgencyPct ? "text-danger" : "text-fg")}>+{job.urgencyPct} %</span>
