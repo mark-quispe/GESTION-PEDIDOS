@@ -38,13 +38,14 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
   }));
 
   // «X tiene más espacio esta semana» (solo el admin).
-  let hint: string | null = null;
+  let hint: { name: string; rest: string } | null = null;
   if (user.isAdmin && !user.viewAsEmployee) {
     const free = people
       .filter((p) => !p.ext)
       .map((p) => ({ ...p, soon: visible.filter((r) => r.responsibleId === p.id && r.status !== "finalizado" && dayKey(r.dueAt) <= addDays(today, 2)).length }))
       .sort((a, b) => a.open - b.open || a.soon - b.soon)[0];
-    if (free && people.filter((p) => !p.ext).length > 1) hint = `${free.name} tiene más espacio esta semana. ${free.open} en curso${free.soon === 0 ? " y nada para entregar en los próximos 2 días" : ""}.`;
+    if (free && people.filter((p) => !p.ext).length > 1)
+      hint = { name: free.name, rest: `${free.open} en curso${free.soon === 0 ? " y nada para entregar en los próximos 2 días" : ""}.` };
   }
 
   return (
