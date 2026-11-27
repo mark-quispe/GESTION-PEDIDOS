@@ -92,6 +92,7 @@ El login solo pide nombre y correo. El permiso de Drive es aparte: lo da el admi
 - **Importar (RF-28):** la columna «Ítems» acepta códigos del tarifario («PL-02 x2, PL-06»). Sin ítems, la fila entra como Personalizado con su descripción y precio.
 - **Respaldo:** la hora (03:00) la fija el cron de Vercel; en Configuración se puede pausar, no cambiar la hora. El aviso de Drive lleno se mide en GB.
 - **Finalizar (pedido de Mark, 27/11):** un trabajo no pasa a Finalizado si le falta cobrar algo. El botón queda desactivado y el servidor lo rechaza. El documento de requerimientos (sección «sin reglas en la v1») debe actualizarse con esta regla.
+- **Correcciones (pedido de Mark, 27/11):** el empleado también registra y hace correcciones. En la ventana de corrección puede elegir «Yo la tomo» aunque no tenga el rol Producción, y luego marca «Corrección hecha». Tomar trabajos nuevos del pozo sigue siendo solo de Producción y del admin.
 - **Logo del estudio:** se guarda como imagen pequeña (máx. 150 KB) en la base, sin depender de Drive.
 
 ## Pendientes con el dueño (sección 9 del documento)

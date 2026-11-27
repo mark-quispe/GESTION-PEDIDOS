@@ -447,7 +447,7 @@ function Header({ job, me, money, setDialog }: { job: JobJSON; me: Me; money: Mo
       <>
         {trash}
         {edit}
-        {!unassigned && (mine || job.externoId || me.isAdmin) && (
+        {s === "en_proceso" && (
           <Button onClick={() => setDialog("correction")}>
             <Wrench className="!size-3.5" /> Corrección <span className="font-mono text-[11px] font-normal text-muted">{job.correctionRounds}/2</span>
           </Button>

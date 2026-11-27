@@ -480,7 +480,7 @@ export async function requestCorrection(input: CorrectionInput): Promise<ActionR
     const v = parsed.data;
     const job = await loadJob(v.jobId);
     if (!["en_proceso", "en_revision", "terminado", "correcciones"].includes(job.status)) throw new UserError("Este trabajo no está para correcciones.");
-    if (v.who === "yo" && !user.canTake) throw new UserError("«Yo la tomo» es solo para quien tiene el rol Producción.");
+    // Las correcciones también las puede hacer el empleado (pedido de Mark, 27/11).
     const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(jobCorrections).where(eq(jobCorrections.jobId, job.id));
     const number = n + 1;
     const counts = v.charge !== "error_estudio";

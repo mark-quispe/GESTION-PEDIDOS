@@ -326,7 +326,7 @@ function CorrectionForm({ job, close, me, externos, driveReady }: { job: JobJSON
             onChange={setWho}
             options={[
               { value: "pozo", label: "Por tomar" },
-              { value: "yo", label: "Yo la tomo", disabled: !me.canTake },
+              { value: "yo", label: "Yo la tomo" },
               { value: "externo", label: "Externo…", disabled: externos.length === 0 },
             ]}
           />
