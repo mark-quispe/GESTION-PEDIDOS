@@ -4,6 +4,8 @@ import { rolesLabel } from "@/lib/domain";
 import { MobileTabs, Sidebar, type NavUser } from "@/components/layout/app-nav";
 import { DemoBanner, ViewAsBanner } from "@/components/layout/banners";
 import { Toaster } from "@/components/ui/toaster";
+import { JobDialogsProvider } from "@/components/jobs/job-dialogs";
+import { isDriveReady } from "@/lib/drive-status";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -18,7 +20,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   };
 
   return (
-    <>
+    <JobDialogsProvider driveReady={isDriveReady(settings)}>
       {user.demo && <DemoBanner />}
       <div className="flex min-h-dvh">
         <Sidebar user={navUser} studioName={settings.studioName} system={system} />
@@ -33,6 +35,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         </main>
       </div>
       <Toaster />
-    </>
+    </JobDialogsProvider>
   );
 }

@@ -293,7 +293,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--danger);
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
   clip-path: inset(0 100% 0 0);
   transition: clip-path 200ms var(--ease-out);
 }
@@ -445,5 +445,84 @@
   from {
     opacity: 0;
     transform: translateY(12px);
+  }
+}
+
+/* El total cambia sin desglose (RF-57): un leve asentamiento al cambiar. */
+.number-pop {
+  display: inline-block;
+  animation: number-pop 220ms var(--ease-out);
+}
+@keyframes number-pop {
+  from {
+    opacity: 0.4;
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .number-pop {
+    animation: none;
+  }
+}
+
+/* Subrayado de la pestaña activa: aparece desde el centro. */
+.tab-underline {
+  animation: tab-in 220ms var(--ease-out);
+}
+@keyframes tab-in {
+  from {
+    transform: scaleX(0.4);
+    opacity: 0;
+  }
+}
+
+/* Nodos del estado: el check entra una vez, escalonado. */
+.step-pop {
+  animation: step-pop 320ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes step-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Casilla de ítem: el check se dibuja al marcar (RF-61). */
+.check {
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    transform 120ms var(--ease-out);
+}
+.check:active:not(:disabled) {
+  transform: scale(0.9);
+}
+.check-mark {
+  animation: check-in 200ms var(--ease-out);
+}
+@keyframes check-in {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Menú pequeño: nace desde su botón. */
+.pop-in {
+  animation: pop-in 150ms var(--ease-out);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-underline,
+  .step-pop,
+  .check-mark,
+  .pop-in {
+    animation: none;
   }
 }

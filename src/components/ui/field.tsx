@@ -1,4 +1,6 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+"use client";
+
+import { Children, cloneElement, forwardRef, isValidElement, useId, type InputHTMLAttributes, type ReactElement, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
@@ -32,16 +34,22 @@ export function Field({
   htmlFor?: string;
   aside?: ReactNode;
 }) {
+  const auto = useId();
+  // Si el campo es un solo input, la etiqueta queda unida a él.
+  const only = Children.count(children) === 1 && isValidElement(children) ? (children as ReactElement<{ id?: string }>) : null;
+  const tag = only?.type === "input" || only?.type === "textarea" || only?.type === "select" || only?.type === Input || only?.type === Textarea;
+  const id = htmlFor ?? (tag ? (only?.props.id ?? auto) : undefined);
+  const body = tag && only && !only.props.id ? cloneElement(only, { id }) : children;
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       <div className="flex min-h-5 items-center justify-between gap-2">
-        <label htmlFor={htmlFor} className="text-[13px] text-fg-2">
+        <label htmlFor={id} className="text-[13px] text-fg-2">
           {label}
           {optional && <span className="ml-1.5 font-mono text-[11px] text-faint">opcional</span>}
         </label>
         {aside}
       </div>
-      {children}
+      {body}
       {error ? <p className="text-xs text-danger">{error}</p> : hint ? <div className="text-xs text-muted">{hint}</div> : null}
     </div>
   );
