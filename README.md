@@ -27,12 +27,20 @@ Next.js 16 (App Router, Server Actions) · PostgreSQL en Neon + Drizzle · Auth.
 
 ## Puesta en marcha
 
+### En local (sin instalar nada más)
+
 1. `pnpm install`
-2. Copia `.env.example` a `.env.local` **y** a `.env` (drizzle-kit lee `.env`) y rellena los valores (cada uno está explicado ahí).
-3. Crea las tablas en la rama `dev` de Neon: `pnpm db:migrate`
-4. Primer administrador: `pnpm db:seed-admin tu-correo@gmail.com`
-5. `pnpm dev` y entra en http://localhost:3000
-6. Como admin: crea los **tipos de servicio** con su prefijo (Administración → Servicios), los **responsables**, y conecta **Drive** (Administración → Configuración).
+2. Crea `.env.local` con una sola línea: `AUTH_SECRET="..."` (`npx auth secret` la genera).
+3. `pnpm dev` y entra en http://localhost:3000
+
+Sin `DATABASE_URL`, la app usa **PGlite**: un Postgres que corre dentro de Node y guarda los datos en `.pglite/`. La primera vez crea las tablas, carga el **tarifario** (15 categorías y 98 ítems) y un **estudio ficticio** con fechas relativas a hoy. En desarrollo, la página de entrada muestra un **acceso de prueba** para entrar como Mark (admin), Ana (empleado + producción), Luis (producción) o Carla (empleado) sin Google. `pnpm db:reset` borra la base local y la vuelve a crear.
+
+### Con Neon y Google
+
+1. Copia `.env.example` a `.env.local` **y** a `.env` (drizzle-kit lee `.env`) y rellena los valores.
+2. Crea las tablas en la rama `dev` de Neon: `pnpm db:migrate`
+3. Pon tu correo en `ADMIN_EMAIL`: la primera vez que la app arranca contra una base vacía lo crea como administrador.
+4. Como admin: conecta **Drive** (Configuración) y revisa el tarifario (Servicios).
 
 ### Google Cloud (un solo proyecto para login y Drive)
 
@@ -67,7 +75,7 @@ El login solo pide nombre y correo. El permiso de Drive es aparte: lo da el admi
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm lint` / `typecheck` | ESLint y TypeScript |
 | `pnpm db:generate` / `db:migrate` / `db:studio` | Drizzle Kit |
-| `pnpm db:seed-admin <correo>` | Da de alta un administrador |
+| `pnpm db:reset` | Borra y vuelve a crear la base local con datos de prueba |
 
 ## Decisiones tomadas donde el documento deja margen
 

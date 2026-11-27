@@ -1,28 +1,51 @@
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import type { Tone } from "@/lib/domain";
 
-const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        outline: "text-muted-foreground",
-        // Solo colores semánticos: ámbar = espera, azul = en curso, verde = hecho, rojo = problema.
-        warning: "border-warning/30 bg-warning/10 text-warning",
-        info: "border-info/30 bg-info/10 text-info",
-        success: "border-success/30 bg-success/10 text-success",
-        danger: "border-danger/30 bg-danger/10 text-danger",
-        muted: "border-border bg-muted text-muted-foreground",
-      },
-    },
-    defaultVariants: { variant: "default" },
-  },
-);
+const tones: Record<Tone, string> = {
+  danger: "border-danger-line text-danger",
+  warning: "border-warning-line text-warning",
+  info: "border-info-line text-info",
+  success: "border-success-line text-success",
+  neutral: "border-border text-muted",
+  strong: "border-border-strong text-fg",
+  muted: "border-border text-faint",
+};
 
-function Badge({ className, variant, ...props }: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
+/** Etiqueta redonda con contorno ("+2 días", "Urgente"). */
+export function Pill({ tone = "neutral", className, ...props }: HTMLAttributes<HTMLSpanElement> & { tone?: Tone }) {
+  return (
+    <span
+      className={cn("inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full border px-2 text-xs whitespace-nowrap", tones[tone], className)}
+      {...props}
+    />
+  );
 }
 
-export { Badge, badgeVariants };
+const dotTones: Record<Tone, string> = {
+  danger: "bg-danger",
+  warning: "bg-warning",
+  info: "bg-info",
+  success: "bg-success",
+  neutral: "bg-faint",
+  strong: "bg-fg",
+  muted: "bg-border",
+};
+
+/** Punto de estado (los atrasados llevan punto rojo en todas las listas, RF-12). */
+export function Dot({ tone = "neutral", className }: { tone?: Tone; className?: string }) {
+  return <span aria-hidden className={cn("inline-block size-[7px] shrink-0 rounded-full", dotTones[tone], className)} />;
+}
+
+export const toneText: Record<Tone, string> = {
+  danger: "text-danger",
+  warning: "text-warning",
+  info: "text-info",
+  success: "text-success",
+  neutral: "text-muted",
+  strong: "text-fg",
+  muted: "text-faint",
+};
+
+/** Barra fina de prioridad a la izquierda (rojo Urgente, ámbar Alta, gris Normal). */
+export const urgencyBar = { urgente: "bg-danger", alta: "bg-warning", normal: "bg-border-strong" } as const;

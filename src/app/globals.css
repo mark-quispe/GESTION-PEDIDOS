@@ -2,141 +2,325 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant hover-fine (@media (hover: hover) and (pointer: fine));
 
 /*
- * Dark Minimalist (inspirado en GitHub Dark): interfaz monocromática en grises grafito.
- * El color se reserva para estados: --danger (error/destructivo), --warning, --success, --info.
+ * Design final: Dark Minimalist en grises (#121212 #1d1d1d #292929 #363636 #a3a3a3 #ededed).
+ * El color solo comunica estados: rojo atrasado/urgente, ámbar alta/por tomar,
+ * azul en curso, verde finalizado. Modo claro "papel" (RF-54): fondo crema,
+ * tarjetas casi blancas, contornos de tinta y estados algo más oscuros.
+ * Por defecto, oscuro.
  */
-:root {
-  color-scheme: light;
-  /* Curvas de animación (Emil Kowalski): ease-out fuerte para entradas e interacción. */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --radius: 0.5rem;
-  --background: #ecebe6;
-  --foreground: #181715;
-  --card: #f7f6f2;
-  --card-foreground: #181715;
-  --primary: #181715;
-  --primary-foreground: #f7f6f2;
-  --secondary: #e2e1dc;
-  --secondary-foreground: #181715;
-  --muted: #e2e1dc;
-  --muted-foreground: #5d5b56;
-  --accent: #e2e1dc;
-  --accent-foreground: #181715;
-  --border: #d6d4ce;
-  --input: #cbc9c2;
-  --ring: #0969da;
-  --danger: #cf222e;
-  --warning: #9a6700;
-  --success: #1a7f37;
-  --info: #0969da;
-  --destructive: var(--danger);
-}
-
+:root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #121212;
-  --foreground: #ededed;
-  --card: #1d1d1d;
-  --card-foreground: #ededed;
-  --primary: #ededed;
-  --primary-foreground: #121212;
-  --secondary: #292929;
-  --secondary-foreground: #ededed;
-  --muted: #292929;
-  --muted-foreground: #a3a3a3;
-  --accent: #292929;
-  --accent-foreground: #ededed;
+  --bg: #121212;
+  --grid: #181818;
+  --side: #161616;
+  --surface: #1d1d1d;
+  --surface-a: rgba(29, 29, 29, 0.72);
+  --hover: #242424;
+  --line: #292929;
   --border: #363636;
-  --input: #363636;
-  --ring: #58a6ff;
+  --border-strong: #5a5a5a;
+  --fg: #ededed;
+  --fg-2: #cfcfcf;
+  --muted: #a3a3a3;
+  --faint: #6e6e6e;
+  --bar: #5c5c5c;
+  --primary: #ededed;
+  --on-primary: #121212;
   --danger: #f85149;
   --warning: #d29922;
   --success: #3fb950;
   --info: #58a6ff;
-  --destructive: var(--danger);
+  --danger-soft: rgba(248, 81, 73, 0.08);
+  --danger-line: rgba(248, 81, 73, 0.45);
+  --warning-soft: rgba(210, 153, 34, 0.1);
+  --warning-line: rgba(210, 153, 34, 0.45);
+  --success-soft: rgba(63, 185, 80, 0.1);
+  --success-line: rgba(63, 185, 80, 0.45);
+  --info-soft: rgba(88, 166, 255, 0.1);
+  --info-line: rgba(88, 166, 255, 0.45);
+  --scrim: rgba(0, 0, 0, 0.5);
+  /* RF-51: única excepción a «color solo para estados». */
+  --pay-yape: #a371f7;
+  --pay-plin: #2dd4bf;
+  --pay-transferencia: #58a6ff;
+  --pay-efectivo: #f0883e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-    --background: #121212;
-    --foreground: #ededed;
-    --card: #1d1d1d;
-    --card-foreground: #ededed;
-    --primary: #ededed;
-    --primary-foreground: #121212;
-    --secondary: #292929;
-    --secondary-foreground: #ededed;
-    --muted: #292929;
-    --muted-foreground: #a3a3a3;
-    --accent: #292929;
-    --accent-foreground: #ededed;
-    --border: #363636;
-    --input: #363636;
-    --ring: #58a6ff;
-    --danger: #f85149;
-    --warning: #d29922;
-    --success: #3fb950;
-    --info: #58a6ff;
-    --destructive: var(--danger);
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ecebe6;
+  --grid: #dedcd4;
+  --side: #e4e2dc;
+  --surface: #f5f4f0;
+  --surface-a: rgba(245, 244, 240, 0.72);
+  --hover: #e6e4de;
+  --line: #cfcdc5;
+  --border: #6b6962;
+  --border-strong: #5f5d57;
+  --fg: #1d1d1d;
+  --fg-2: #3a3935;
+  --muted: #5f5d57;
+  --faint: #8f8d85;
+  --bar: #a9a79e;
+  --primary: #1d1d1d;
+  --on-primary: #f5f4f0;
+  --danger: #cf222e;
+  --warning: #9a6700;
+  --success: #1a7f37;
+  --info: #0969da;
+  --danger-soft: rgba(207, 34, 46, 0.07);
+  --danger-line: rgba(207, 34, 46, 0.45);
+  --warning-soft: rgba(154, 103, 0, 0.08);
+  --warning-line: rgba(154, 103, 0, 0.45);
+  --success-soft: rgba(26, 127, 55, 0.08);
+  --success-line: rgba(26, 127, 55, 0.45);
+  --info-soft: rgba(9, 105, 218, 0.07);
+  --info-line: rgba(9, 105, 218, 0.45);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --pay-yape: #8250df;
+  --pay-plin: #0f9e8c;
+  --pay-transferencia: #0969da;
+  --pay-efectivo: #bc4c00;
 }
 
 @theme inline {
-  --font-sans: var(--font-work-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --font-sans: var(--font-work-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-bg: var(--bg);
+  --color-side: var(--side);
+  --color-surface: var(--surface);
+  --color-surface-a: var(--surface-a);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
   --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  --color-faint: var(--faint);
+  --color-bar: var(--bar);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-success: var(--success);
   --color-info: var(--info);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+  --color-scrim: var(--scrim);
+  --color-pay-yape: var(--pay-yape);
+  --color-pay-plin: var(--pay-plin);
+  --color-pay-transferencia: var(--pay-transferencia);
+  --color-pay-efectivo: var(--pay-efectivo);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-bg text-fg font-sans;
     font-feature-settings: "tnum";
   }
-  h1, h2 {
-    letter-spacing: -0.025em;
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
   }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--info);
+    outline-offset: 2px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  /* En el celular, 16px evita que el navegador haga zoom al escribir. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
+  }
+}
+
+/* Fondo de lámina: cuadrícula de 24 px en ambos modos (RF-54). */
+.sheet-grid {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+/* Pulsar: confirma que la interfaz escuchó (Emil). */
+.press {
+  transition: transform 160ms var(--ease-out);
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Filas: fondo al pasar el mouse, solo con puntero fino. */
+.row {
+  transition: background-color 150ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background-color: var(--hover);
+  }
+}
+
+/* Acciones que aparecen al pasar el mouse (Tomar, RF-47). En táctil, siempre visibles. */
+.reveal .act {
+  opacity: 0;
+  transform: translateX(6px);
+  pointer-events: none;
+  transition:
+    opacity 150ms ease-out,
+    transform 180ms var(--ease-out);
+}
+.reveal:hover .act,
+.reveal:focus-within .act {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .reveal .act {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+/* Botón Tomar: rectángulo con contorno y una flecha en un cuadrito blanco (RF-49). */
+.take {
+  transition:
+    border-color 150ms ease-out,
+    transform 120ms ease-out;
+}
+.take:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.take .arrow {
+  transition: transform 180ms var(--ease-out);
+}
+@media (hover: hover) {
+  .take:hover {
+    border-color: var(--muted);
+  }
+  .take:hover .arrow {
+    transform: translateX(2px);
+  }
+}
+
+/* Enlace con chevron que aparece al pasar el mouse. */
+.link-row .chev {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 150ms ease-out,
+    transform 180ms var(--ease-out);
+}
+@media (hover: hover) {
+  .link-row:hover .chev {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Entrada escalonada de las tarjetas al llegar a una página (una por contenedor). */
+.enter {
+  animation: enter 360ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Barras: escala de la base hacia arriba (sin animar alto). */
+.grow-y {
+  transform-origin: bottom;
+  animation: grow-y 520ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0.04);
+  }
+}
+
+/* Mantener presionado 2 s (RF-04, RF-63): el relleno avanza lento y vuelve rápido. */
+.hold {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hold .hold-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--danger);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 200ms var(--ease-out);
+}
+.hold[data-holding="true"] .hold-fill {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 2s linear;
 }
 
 /* Movimiento reducido: se quitan desplazamientos y escalas, se mantienen los fundidos. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    transition-property: opacity, color, background-color, border-color !important;
-    scroll-behavior: auto !important;
+  .enter {
+    animation-name: fade;
+  }
+  .grow-y {
+    animation: none;
+  }
+  .press:active:not(:disabled),
+  .take:active:not(:disabled) {
+    transform: none;
+  }
+  .reveal .act {
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
   }
 }
 
@@ -146,28 +330,120 @@
   transition: none !important;
 }
 
-/* Papel milimetrado: retícula fina como fondo de plano (solo en el acceso). */
-.drafting-grid {
-  background-image:
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+/* Barras de desplazamiento discretas. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
-/* El arco de la marca se traza una vez al entrar (momento único, no se repite). */
-.mark-draw {
-  stroke-dashoffset: 1;
-  animation: mark-draw 700ms var(--ease-out) 150ms forwards;
+/* Planta de la entrada (RF-52). */
+:root,
+:root[data-theme="dark"] {
+  --plan-furniture: #3a3a3a;
+  --plan-wall: #262626;
+  --plan-wall-line: #7a7a7a;
+  --plan-soft: #8a8a8a;
+  --plan-dim: #5f5f5f;
+  --plan-tick: #4a4a4a;
 }
-@keyframes mark-draw {
-  to {
-    stroke-dashoffset: 0;
+:root[data-theme="light"] {
+  --plan-furniture: #bdbab1;
+  --plan-wall: #d9d7cf;
+  --plan-wall-line: #5f5d57;
+  --plan-soft: #6b6962;
+  --plan-dim: #8f8d85;
+  --plan-tick: #a9a79e;
+}
+.plan-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: plan-draw 900ms var(--ease-out) 300ms both;
+}
+@keyframes plan-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.enter-up {
+  animation: enter-up 500ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mark-draw {
-    stroke-dashoffset: 0;
+  .plan-draw,
+  .enter-up {
     animation: none;
+  }
+}
+
+/* Ventanas: entran con ease-out y salen más rápido de lo que entraron. */
+.overlay[data-state="open"] {
+  animation: fade 200ms ease-out;
+}
+.overlay[data-state="closed"] {
+  animation: fade-out 150ms ease-in forwards;
+}
+.modal[data-state="open"] {
+  animation: modal-in 240ms var(--ease-out);
+}
+.modal[data-state="closed"] {
+  animation: modal-out 150ms ease-in forwards;
+}
+.sheet[data-state="open"] {
+  animation: sheet-in 320ms var(--ease-drawer);
+}
+.sheet[data-state="closed"] {
+  animation: sheet-out 200ms var(--ease-out) forwards;
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal[data-state="open"],
+  .sheet[data-state="open"] {
+    animation: fade 160ms ease-out;
+  }
+  .modal[data-state="closed"],
+  .sheet[data-state="closed"] {
+    animation: fade-out 120ms ease-out forwards;
+  }
+}
+
+.sheet-up {
+  animation: sheet-up 260ms var(--ease-drawer);
+}
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 }

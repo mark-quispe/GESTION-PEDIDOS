@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, settings } from "@/db/schema";
 import { decrypt } from "@/lib/crypto";
+import { getSettings } from "@/lib/settings";
 
 /**
  * Google Drive con la cuenta del admin y el permiso mínimo `drive.file` (RNF-09).
@@ -29,12 +30,7 @@ export class DriveNotConfiguredError extends DriveError {
   }
 }
 
-export async function getSettings() {
-  const row = await db.query.settings.findFirst({ where: eq(settings.id, 1) });
-  if (row) return row;
-  const [created] = await db.insert(settings).values({ id: 1 }).onConflictDoNothing().returning();
-  return created ?? (await db.query.settings.findFirst({ where: eq(settings.id, 1) }))!;
-}
+export { getSettings };
 
 export type DriveState = "sin_conectar" | "sin_carpeta" | "conectado" | "desconectado";
 

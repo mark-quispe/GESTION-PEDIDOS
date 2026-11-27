@@ -1,123 +1,205 @@
 /**
- * Vocabulario del negocio y cálculos derivados (sin base de datos).
- * Se usa en servidor y en cliente.
+ * Reglas del negocio que se usan igual en pantalla y en el servidor.
+ * Todo sale de docs/requerimientos.md (v0.9).
  */
-import type { JobFolder, JobStatus, PaymentKind, PaymentMethod, Urgency } from "@/db/schema";
+import type { JobStatus, PaymentMethod, Role, Urgency } from "@/db/schema";
 
-export const JOB_STATUSES: JobStatus[] = [
-  "consulta",
-  "cotizado",
-  "confirmado",
-  "en_proceso",
-  "en_revision",
-  "correcciones",
-  "entregado",
-  "cancelado",
-];
+/* ---------- Roles (2.1) ---------- */
 
-/** RF-09 */
-export const STATUS_LABELS: Record<JobStatus, string> = {
-  consulta: "Consulta",
-  cotizado: "Cotizado",
+export const ROLE_LABEL: Record<Role, string> = { admin: "Administrador", empleado: "Empleado", produccion: "Producción" };
+
+export const isAdmin = (roles: readonly string[]) => roles.includes("admin");
+/** Producción = Empleado + Tomar. El admin ya incluye todo. */
+export const canTake = (roles: readonly string[]) => roles.includes("admin") || roles.includes("produccion");
+
+export function rolesLabel(roles: readonly string[]) {
+  if (roles.includes("admin")) return ROLE_LABEL.admin;
+  return roles
+    .filter((r): r is Role => r in ROLE_LABEL)
+    .map((r) => ROLE_LABEL[r])
+    .join(" + ");
+}
+
+/* ---------- Estados (RF-09) ---------- */
+
+export const STATUS_LABEL: Record<JobStatus, string> = {
+  cotizacion: "Cotización",
   confirmado: "Confirmado",
   en_proceso: "En proceso",
-  en_revision: "En revisión",
+  terminado: "Terminado",
+  en_revision: "En revisión por el cliente",
   correcciones: "Correcciones",
-  entregado: "Entregado",
+  finalizado: "Finalizado",
   cancelado: "Cancelado",
 };
 
-export const STATUS_HINTS: Record<JobStatus, string> = {
-  consulta: "Escribió, todavía no hay precio",
-  cotizado: "Se le dio el precio y falta que confirme",
-  confirmado: "Pagó el adelanto y el trabajo empieza",
-  en_proceso: "Alguien lo está haciendo",
-  en_revision: "Se le envió el avance o el trabajo final",
-  correcciones: "Pidió cambios",
-  entregado: "Recibió la versión final",
-  cancelado: "No confirmó o se echó atrás",
+/** Etiqueta corta para listas. */
+export const STATUS_SHORT: Record<JobStatus, string> = {
+  ...STATUS_LABEL,
+  terminado: "Terminado · por enviar",
+  en_revision: "En revisión",
 };
 
-/** Estados cerrados: no cuentan como abiertos ni como atrasados. */
-export const CLOSED_STATUSES: JobStatus[] = ["entregado", "cancelado"];
-export const OPEN_STATUSES = JOB_STATUSES.filter((s) => !CLOSED_STATUSES.includes(s));
-/** RF-41: trabajos en curso (ya confirmados y sin entregar). */
-export const ACTIVE_STATUSES: JobStatus[] = ["confirmado", "en_proceso", "en_revision", "correcciones"];
+/** Pasos de la barra de estados de la ficha (RF-61). */
+export const STATUS_STEPS: JobStatus[] = ["cotizacion", "confirmado", "en_proceso", "terminado", "en_revision", "finalizado"];
 
+export const CLOSED_STATUSES: JobStatus[] = ["finalizado", "cancelado"];
+export const isClosed = (s: JobStatus) => CLOSED_STATUSES.includes(s);
+export const isOpen = (s: JobStatus) => !isClosed(s);
+
+/** RF-13: solo cuenta como atrasado mientras depende del estudio. */
+export const LATE_STATUSES: JobStatus[] = ["confirmado", "en_proceso", "correcciones"];
+
+export function isLate(status: JobStatus, dueAt: Date | string, now = new Date()) {
+  return LATE_STATUSES.includes(status) && new Date(dueAt).getTime() < now.getTime();
+}
+
+/** Días de atraso (redondeado hacia arriba), 0 si no está atrasado. */
+export function lateDays(status: JobStatus, dueAt: Date | string, now = new Date()) {
+  if (!isLate(status, dueAt, now)) return 0;
+  return Math.max(1, Math.ceil((now.getTime() - new Date(dueAt).getTime()) / 86_400_000));
+}
+
+/**
+ * Color de estado para punto y texto. El color solo comunica estados:
+ * rojo atrasado, ámbar por tomar / cotización, azul en curso, blanco terminado, verde finalizado.
+ */
+export type Tone = "danger" | "warning" | "info" | "success" | "neutral" | "strong" | "muted";
+
+export function statusTone(status: JobStatus, late = false, unassigned = false): Tone {
+  if (late) return "danger";
+  switch (status) {
+    case "cotizacion":
+      return "warning";
+    case "confirmado":
+      return unassigned ? "warning" : "info";
+    case "en_proceso":
+      return unassigned ? "warning" : "info";
+    case "correcciones":
+      return "warning";
+    case "terminado":
+      return "strong";
+    case "en_revision":
+      return "info";
+    case "finalizado":
+      return "success";
+    case "cancelado":
+      return "muted";
+  }
+}
+
+/* ---------- Urgencia (RF-57) ---------- */
+
+export const URGENCY_LABEL: Record<Urgency, string> = { normal: "Normal", alta: "Alta", urgente: "Urgente" };
 export const URGENCIES: Urgency[] = ["normal", "alta", "urgente"];
-export const URGENCY_LABELS: Record<Urgency, string> = { normal: "Normal", alta: "Alta", urgente: "Urgente" };
 
-export const PAYMENT_METHODS: PaymentMethod[] = ["yape", "plin", "transferencia", "efectivo"];
-export const METHOD_LABELS: Record<PaymentMethod, string> = {
+export function formatDeadline(hours: number) {
+  if (hours >= 48 && hours % 24 === 0) return `${hours / 24} días`;
+  return `${hours} h`;
+}
+
+/* ---------- Pagos (RF-14, RF-17) ---------- */
+
+export const METHOD_LABEL: Record<PaymentMethod, string> = {
   yape: "Yape",
   plin: "Plin",
   transferencia: "Transferencia",
   efectivo: "Efectivo",
 };
+export const METHODS: PaymentMethod[] = ["yape", "plin", "transferencia", "efectivo"];
 
-export const KIND_LABELS: Record<PaymentKind, string> = { pago: "Pago", devolucion: "Devolución" };
+export type MoneyMovement = { kind: "pago" | "devolucion"; amount: number; voidedAt?: Date | string | null; deletedAt?: Date | string | null };
 
-export const FOLDER_LABELS: Record<JobFolder, string> = {
-  recibido: "Recibido",
-  avances: "Avances",
-  entrega_final: "Entrega final",
-  pagos: "Pagos",
-};
-export const UPLOAD_FOLDERS: JobFolder[] = ["recibido", "avances", "entrega_final"];
-
-/** RF-08: PL26-014. El número lleva al menos tres cifras. */
-export function formatJobCode(prefix: string, year: number, seq: number) {
-  return `${prefix.toUpperCase()}${String(year % 100).padStart(2, "0")}-${String(seq).padStart(3, "0")}`;
+/** Lo pagado neto: pagos menos devoluciones, sin anulados ni eliminados. */
+export function paidNet(movements: MoneyMovement[]) {
+  return round2(
+    movements
+      .filter((m) => !m.voidedAt && !m.deletedAt)
+      .reduce((s, m) => s + (m.kind === "devolucion" ? -m.amount : m.amount), 0),
+  );
 }
 
-/** RF-13: atrasado si la fecha ya pasó y no se entregó. */
-export function isLate(status: JobStatus, dueDate: string | null, today: string) {
-  return !!dueDate && dueDate < today && !CLOSED_STATUSES.includes(status);
-}
+export type PayState = "sin_pagar" | "adelanto" | "pagado" | "de_mas";
 
-/** RF-17: estado de pago, separado del estado del trabajo. */
-export type PaymentStatus = "sin_pagar" | "adelanto" | "completo";
-export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+export const PAY_STATE_LABEL: Record<PayState, string> = {
   sin_pagar: "Sin pagar",
   adelanto: "Adelanto pagado",
-  completo: "Pagado completo",
+  pagado: "Pagado completo",
+  de_mas: "Pagado de más",
 };
 
-export function paymentStatus(price: string | number | null, paid: string | number): PaymentStatus {
-  const p = Number(paid);
-  if (p <= 0) return "sin_pagar";
-  if (price === null || Number(price) <= 0 || p < Number(price)) return "adelanto";
-  return "completo";
+export function payState(total: number, paid: number): PayState {
+  if (paid > total + 0.004) return "de_mas";
+  if (paid <= 0.004) return "sin_pagar";
+  if (paid + 0.004 >= total) return "pagado";
+  return "adelanto";
 }
 
-/** RF-16: saldo pendiente. Nunca negativo en pantalla; un saldo a favor se muestra aparte. */
-export function balance(price: string | number | null, paid: string | number) {
-  if (price === null) return 0;
-  return Math.round((Number(price) - Number(paid)) * 100) / 100;
+/* ---------- Precio (RF-59) ---------- */
+
+export const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export type PriceLine = { basePrice: number; quantity: number; pricingMode: "fijo" | "ciclo"; hours?: number | null };
+
+export function cycleFactor(factors: Record<string, number>, cycle: number | null | undefined) {
+  if (!cycle) return 1;
+  return factors[String(cycle)] ?? 1;
 }
 
-/** RF-36: el WhatsApp se guarda solo con dígitos y código de país de Perú si falta. */
-export function normalizeWhatsapp(raw: string) {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length === 9 && digits.startsWith("9")) return `51${digits}`;
-  return digits;
+export function lineAmount(line: PriceLine, factor: number) {
+  return round2(line.basePrice * line.quantity * (line.pricingMode === "ciclo" ? factor : 1));
 }
 
-export function formatWhatsapp(digits: string) {
-  if (digits.length === 11 && digits.startsWith("51")) {
-    return `+51 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
-  }
-  return digits ? `+${digits}` : "";
+/** Total = Σ(base × cantidad × factor si es ×C) × (1 + recargo) + adicional − descuento. */
+export function computeTotal(lines: PriceLine[], factor: number, urgencyPct: number, extra = 0, discount = 0) {
+  const subtotal = round2(lines.reduce((s, l) => s + lineAmount(l, factor), 0));
+  const surcharge = round2(subtotal * (urgencyPct / 100));
+  const total = round2(subtotal + surcharge + (extra || 0) - (discount || 0));
+  const hours = round2(lines.reduce((s, l) => s + (l.hours ?? 0) * l.quantity, 0));
+  return { subtotal, surcharge, total: Math.max(0, total), hours };
 }
 
-/** Para comparar textos escritos a mano (RF-35): sin mayúsculas, tildes ni espacios de más. */
-export function normalizeText(s: string | null | undefined) {
-  return (s ?? "")
+/* ---------- Código (RF-08) ---------- */
+
+export function jobCode(prefix: string, year: number, seq: number) {
+  return `${prefix}${String(year).slice(-2)}-${String(seq).padStart(3, "0")}`;
+}
+
+/** Ciclo académico tipo 2026-II deducido de la fecha (I: ene–jul, II: ago–dic). */
+export function academicTermFor(d: Date) {
+  const y = d.getFullYear();
+  return `${y}-${d.getMonth() >= 7 ? "II" : "I"}`;
+}
+
+/* ---------- Texto ---------- */
+
+export function initials(name: string | null | undefined) {
+  if (!name) return "—";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+export function firstName(name: string | null | undefined) {
+  return name?.trim().split(/\s+/)[0] ?? "";
+}
+
+/** Sin tildes ni mayúsculas, para buscar. */
+export function normalizeText(s: string) {
+  return s
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
-    .replace(/\s+/g, " ")
     .trim();
 }
 
-export const ROLE_LABELS = { admin: "Administrador", empleado: "Empleado" } as const;
+/** WhatsApp: solo dígitos, sin el 51 de Perú. */
+export function normalizePhone(s: string) {
+  const d = s.replace(/\D/g, "");
+  return d.length === 11 && d.startsWith("51") ? d.slice(2) : d;
+}
+
+export function formatPhone(s: string | null | undefined) {
+  if (!s) return "—";
+  const d = s.replace(/\D/g, "");
+  return d.length === 9 ? `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}` : s;
+}

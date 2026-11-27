@@ -1,35 +1,33 @@
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
-import type { Role } from "@/db/schema";
 
 /**
  * Configuración sin base de datos: la usa el proxy (src/proxy.ts) para
- * redirigir a /login. La validación real de rol se hace en el servidor
- * (src/lib/auth-guard.ts) en cada página y Server Action.
+ * mandar a /entrar a quien no inició sesión. La validación real de rol se hace
+ * en el servidor (src/lib/auth-guard.ts) en cada página y Server Action.
  */
 export const authConfig = {
-  providers: [Google],
-  pages: { signIn: "/login", error: "/login" },
-  session: { strategy: "jwt" },
+  providers: [],
+  pages: { signIn: "/entrar", error: "/entrar" },
+  // RNF-13: la sesión vence a los 30 días.
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  trustHost: true,
   callbacks: {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
-      const isLoginPage = request.nextUrl.pathname.startsWith("/login");
-      if (isLoginPage) {
-        return isLoggedIn ? Response.redirect(new URL("/", request.nextUrl)) : true;
-      }
+      const isEntry = request.nextUrl.pathname.startsWith("/entrar");
+      if (isEntry) return isLoggedIn ? Response.redirect(new URL("/", request.nextUrl)) : true;
       return isLoggedIn;
     },
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.uid = user.id;
+        token.demo = (user as { demo?: boolean }).demo ?? false;
       }
       return token;
     },
     session({ session, token }) {
-      if (token.id) session.user.id = token.id as string;
-      if (token.role) session.user.role = token.role as Role;
+      if (token.uid) session.user.id = token.uid as string;
+      (session as { demo?: boolean }).demo = !!token.demo;
       return session;
     },
   },

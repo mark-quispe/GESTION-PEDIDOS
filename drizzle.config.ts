@@ -1,11 +1,13 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
+// Sin DATABASE_URL se trabaja contra la base local (PGlite en .pglite).
 export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./drizzle",
   dialect: "postgresql",
-  dbCredentials: { url: process.env.DATABASE_URL! },
   casing: "snake_case",
-  strict: true,
+  ...(process.env.DATABASE_URL
+    ? { dbCredentials: { url: process.env.DATABASE_URL } }
+    : { driver: "pglite", dbCredentials: { url: ".pglite" } }),
 });

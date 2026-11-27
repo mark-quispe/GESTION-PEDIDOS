@@ -14,9 +14,9 @@ const OPTIONS: { value: ThemePref; label: string; icon: typeof Sun }[] = [
 function readPref(): ThemePref {
   try {
     const v = localStorage.getItem(THEME_KEY);
-    return v === "light" || v === "dark" ? v : "system";
+    return v === "light" || v === "system" ? v : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 
@@ -29,6 +29,7 @@ function apply(pref: ThemePref) {
   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("theme-switching")));
 }
 
+/** RF-54: selector de tres iconos (claro, oscuro, sistema). */
 export function ThemeToggle({ className }: { className?: string }) {
   const [pref, setPref] = useState<ThemePref | null>(null);
 
@@ -37,7 +38,6 @@ export function ThemeToggle({ className }: { className?: string }) {
     setPref(readPref());
   }, []);
 
-  // Si sigue al sistema, reacciona cuando el sistema cambia de tema.
   useEffect(() => {
     if (pref !== "system") return;
     const mq = matchMedia("(prefers-color-scheme: dark)");
@@ -48,15 +48,14 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const choose = (value: ThemePref) => {
     try {
-      if (value === "system") localStorage.removeItem(THEME_KEY);
-      else localStorage.setItem(THEME_KEY, value);
+      localStorage.setItem(THEME_KEY, value);
     } catch {}
     setPref(value);
     apply(value);
   };
 
   return (
-    <div role="radiogroup" aria-label="Tema" className={cn("inline-flex rounded-lg border bg-muted p-0.5", className)}>
+    <div role="radiogroup" aria-label="Tema" className={cn("inline-flex gap-0.5 rounded-lg border p-[3px]", className)}>
       {OPTIONS.map(({ value, label, icon: Icon }) => {
         const active = pref === value;
         return (
@@ -69,11 +68,11 @@ export function ThemeToggle({ className }: { className?: string }) {
             title={label}
             onClick={() => choose(value)}
             className={cn(
-              "grid size-10 place-items-center rounded-md text-muted-foreground transition-[color,background-color,transform] duration-150 ease-(--ease-out) hover:text-foreground active:scale-[0.97] sm:size-8",
-              active && "bg-card text-foreground shadow-xs",
+              "press grid h-7 w-[30px] place-items-center rounded-[5px] text-muted transition-colors duration-150 hover-fine:hover:text-fg",
+              active && "bg-line text-fg",
             )}
           >
-            <Icon className="size-4" />
+            <Icon className="size-[15px]" strokeWidth={1.8} />
           </button>
         );
       })}
