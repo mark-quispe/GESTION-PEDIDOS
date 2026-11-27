@@ -35,7 +35,7 @@ export default async function JobPage({ params }: PageProps<"/trabajos/[code]">)
       urgency={settings.urgency}
       lastSeen={lastSeen?.toISOString() ?? null}
       driveReady={isDriveReady(settings)}
-      studio={{ name: settings.studioName, whatsapp: settings.whatsapp, facebook: settings.facebook, instagram: settings.instagram }}
+      studio={{ name: settings.studioName, whatsapp: settings.whatsapp, facebook: settings.facebook, instagram: settings.instagram, logoUrl: settings.logoUrl }}
     />
   );
 }

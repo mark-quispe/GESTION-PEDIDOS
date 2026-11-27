@@ -35,7 +35,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
   if (s.lastBackupAt) {
     const same = dayKey(s.lastBackupAt) === todayLima();
     backup = s.lastBackupOk === false ? "Falló" : `${same ? "Hoy" : dayMonth(s.lastBackupAt)} ${timeLima(s.lastBackupAt)}`;
-    backupOk = s.lastBackupOk !== false;
+    backupOk = s.lastBackupOk !== false || s.alerts.backupFailed === false;
   }
   const ok = driveOk && backupOk;
   return {

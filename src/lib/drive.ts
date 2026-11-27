@@ -299,3 +299,55 @@ export async function ensureBackupsFolder() {
   await db.update(settings).set({ driveBackupsFolderId: id }).where(eq(settings.id, 1));
   return id;
 }
+
+/* ---------- RF-22: la carpeta raíz se comparte con cada usuario con acceso ---------- */
+
+type Permission = { id: string; emailAddress?: string; role: string; type: string };
+
+export async function listRootPermissions(): Promise<Permission[]> {
+  const s = await getSettings();
+  if (!s.driveRootFolderId) return [];
+  const res = await driveFetch(`${API}/files/${encodeURIComponent(s.driveRootFolderId)}/permissions?fields=permissions(id,emailAddress,role,type)&supportsAllDrives=true`);
+  return (await json<{ permissions: Permission[] }>(res, "leer con quién está compartida la carpeta")).permissions;
+}
+
+/** Comparte la raíz como editor, sin mandar correo de Google. */
+export async function shareRoot(email: string) {
+  const s = await getSettings();
+  if (!s.driveRootFolderId) return;
+  const res = await driveFetch(`${API}/files/${encodeURIComponent(s.driveRootFolderId)}/permissions?sendNotificationEmail=false&supportsAllDrives=true`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "user", role: "writer", emailAddress: email }),
+  });
+  await json(res, "compartir la carpeta");
+}
+
+/** Deja de compartir la raíz con ese correo (al quitar el acceso). */
+export async function unshareRoot(email: string) {
+  const s = await getSettings();
+  if (!s.driveRootFolderId) return;
+  const perm = (await listRootPermissions()).find((p) => p.emailAddress?.toLowerCase() === email.toLowerCase() && p.role !== "owner");
+  if (!perm) return;
+  const res = await driveFetch(`${API}/files/${encodeURIComponent(s.driveRootFolderId)}/permissions/${perm.id}?supportsAllDrives=true`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) throw new DriveError("Drive no pudo dejar de compartir la carpeta.");
+}
+
+/** Espacio usado de la cuenta (RF-56, aviso de Drive lleno). */
+export async function storageQuota(): Promise<{ used: number; limit: number | null }> {
+  const res = await driveFetch(`${API}/about?fields=storageQuota`);
+  const q = (await json<{ storageQuota: { usage: string; limit?: string } }>(res, "leer el espacio")).storageQuota;
+  return { used: Number(q.usage), limit: q.limit ? Number(q.limit) : null };
+}
+
+/** Lo intenta y no rompe la acción si Drive no está (el acceso a la app no depende de Drive). */
+export async function tryDrive<T>(fn: () => Promise<T>): Promise<T | null> {
+  try {
+    const s = await getSettings();
+    if (driveState(s) !== "conectado") return null;
+    return await fn();
+  } catch (e) {
+    console.error("Drive:", e);
+    return null;
+  }
+}

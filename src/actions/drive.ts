@@ -9,7 +9,8 @@ import type { ActionResult } from "@/actions/result";
 import { assertRole } from "@/lib/auth-guard";
 import { audit } from "@/lib/audit";
 import { fail, UserError } from "@/lib/action-utils";
-import { FOLDER_MIME, forgetAccessToken, getAccessToken, getFile } from "@/lib/drive";
+import { FOLDER_MIME, forgetAccessToken, getAccessToken, getFile, shareRoot, tryDrive } from "@/lib/drive";
+import { users } from "@/db/schema";
 import { getSettings } from "@/lib/settings";
 
 export type PickerConfig = { accessToken: string; apiKey: string; appId: string };
@@ -43,6 +44,8 @@ export async function setDriveRoot(folderId: string): Promise<ActionResult> {
         .where(eq(settings.id, 1)),
       audit({ entity: "configuracion", entityId: "drive", action: "carpeta", summary: `eligió la carpeta raíz «${folder.name}»`, before: before.driveRootFolderName, after: folder.name, userId: user.id }),
     ]);
+    // RF-22: la carpeta nueva se comparte con todos los que tienen acceso.
+    if (changed) for (const u of await db.select({ email: users.email }).from(users).where(eq(users.active, true))) if (u.email !== before.driveAccountEmail) await tryDrive(() => shareRoot(u.email));
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (e) {

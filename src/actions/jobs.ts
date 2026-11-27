@@ -187,7 +187,7 @@ export async function createJob(input: CreateJobInput): Promise<ActionResult<{ c
         professor: v.professor,
         section: v.section,
         university,
-        academicTerm: academicTermFor(dueAt),
+        academicTerm: s.academicTerm || academicTermFor(dueAt),
         software: v.software,
         deliveryFormat: v.deliveryFormat,
         dueAt,

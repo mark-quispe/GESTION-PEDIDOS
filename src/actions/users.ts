@@ -10,6 +10,7 @@ import { assertRole } from "@/lib/auth-guard";
 import { fail, invalid, UserError } from "@/lib/action-utils";
 import { audit } from "@/lib/audit";
 import { rolesLabel } from "@/lib/domain";
+import { shareRoot, tryDrive, unshareRoot } from "@/lib/drive";
 
 const done = () => revalidatePath("/", "layout");
 
@@ -62,6 +63,7 @@ export async function grantAccess(input: z.input<typeof grantSchema>): Promise<A
         audit({ entity: "usuario", entityId: id, action: "acceso", summary: `dio acceso a ${v.email} como ${rolesLabel(roles)}`, userId: me.id }),
       ]);
     }
+    await tryDrive(() => shareRoot(v.email));
     done();
     return { ok: true };
   } catch (e) {
@@ -99,6 +101,7 @@ export async function revokeAccess(userId: string): Promise<ActionResult> {
       db.update(users).set({ active: false }).where(eq(users.id, userId)),
       audit({ entity: "usuario", entityId: userId, action: "acceso", summary: `quitó el acceso a ${u.email}`, userId: me.id }),
     ]);
+    await tryDrive(() => unshareRoot(u.email));
     done();
     return { ok: true };
   } catch (e) {

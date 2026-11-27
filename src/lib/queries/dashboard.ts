@@ -83,8 +83,8 @@ export async function getDashboard(withMoney: boolean): Promise<Dashboard> {
 
   // RF-56: avisos encendidos.
   const alerts = {
-    quotes: quotes.filter((q) => q.ageDays >= s.alerts.quoteDays).length,
-    pending: pendingRows.filter((p) => p.finishedAgo !== null && p.finishedAgo >= s.alerts.pendingDays).length,
+    quotes: s.alerts.quoteOn === false ? 0 : quotes.filter((q) => q.ageDays >= s.alerts.quoteDays).length,
+    pending: s.alerts.pendingOn === false ? 0 : pendingRows.filter((p) => p.finishedAgo !== null && p.finishedAgo >= s.alerts.pendingDays).length,
   };
 
   const result: Dashboard = {

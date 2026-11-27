@@ -17,7 +17,7 @@ export type NewJobData = {
   canTake: boolean;
   nextCodeHint: string;
   driveReady: boolean;
-  studio: { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null };
+  studio: { name: string; whatsapp: string | null; facebook: string | null; instagram: string | null; logoUrl?: string | null };
 };
 
 /** Lo que necesita la ventana Nuevo trabajo. Se pide al abrirla, no en cada página. */
@@ -32,7 +32,7 @@ export async function getNewJobData(): Promise<NewJobData> {
     canTake: user.canTake,
     nextCodeHint: "",
     driveReady: isDriveReady(s),
-    studio: { name: s.studioName, whatsapp: s.whatsapp, facebook: s.facebook, instagram: s.instagram },
+    studio: { name: s.studioName, whatsapp: s.whatsapp, facebook: s.facebook, instagram: s.instagram, logoUrl: s.logoUrl },
   };
 }
 
